@@ -6,11 +6,13 @@
 // Helpers
 //-----------------------------------------------------------------------------
 
-export const state = Symbol.for("pledge:state");
-export const result = Symbol.for("pledge:result");
-export const isHandled = Symbol.for("pledge:isHandled");
-export const fulfillReactions = Symbol.for("pledge:fulfillReactions");
-export const rejectReactions = Symbol.for("pledge:rejectReactions");
+export const PledgeSymbol = Object.freeze({
+    state: Symbol("PledgeState"),
+    result: Symbol("PledgeResult"),
+    isHandled: Symbol("PledgeIsHandled"),
+    fulfillReactions: Symbol("PledgeFulfillReactions"),
+    rejectReactions: Symbol("PledgeRejectReactions")
+});
 
 //-----------------------------------------------------------------------------
 // Main
@@ -27,11 +29,11 @@ export class Pledge {
             throw new TypeError("Executor must be a function.");
         }
 
-        this[state] = "pending";
-        this[result] = undefined;
-        this[isHandled] = false;
-        this[fulfillReactions] = [];
-        this[rejectReactions] = [];
+        this[PledgeSymbol.state] = "pending";
+        this[PledgeSymbol.result] = undefined;
+        this[PledgeSymbol.isHandled] = false;
+        this[PledgeSymbol.fulfillReactions] = [];
+        this[PledgeSymbol.rejectReactions] = [];
 
         /**
          * Fulfills the pledge with the given value. Also initiates the
@@ -41,8 +43,8 @@ export class Pledge {
          */
         const resolve = value => {
             queueMicrotask(() => {
-                this[state] = "fulfilled";
-                this[result] = value;
+                this[PledgeSymbol.state] = "fulfilled";
+                this[PledgeSymbol.result] = value;
                 // TODO: run fulfillment handlers
             });
         };
@@ -55,8 +57,8 @@ export class Pledge {
          */
         const reject = reason => {
             queueMicrotask(() => {
-                this[state] = "rejected";
-                this[result] = reason;
+                this[PledgeSymbol.state] = "rejected";
+                this[PledgeSymbol.result] = reason;
                 // TODO: run rejection handlers
             });
         };
