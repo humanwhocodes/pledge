@@ -31,33 +31,42 @@ describe("Pledge", () => {
         });
 
         
-        it("should be in the fulfilled state when the executor calls resolve()", () => {
+        it("should be in the fulfilled state when the executor calls resolve()", done => {
             const pledge = new Pledge(resolve => {
                 resolve(42);
             });
 
-            expect(pledge[state]).to.equal("fulfilled");
-            expect(pledge[result]).to.equal(42);
+            queueMicrotask(() => {
+                expect(pledge[state]).to.equal("fulfilled");
+                expect(pledge[result]).to.equal(42);
+                done();
+            });
         });
 
-        it("should be in the rejected state when the executor calls reject()", () => {
+        it("should be in the rejected state when the executor calls reject()", done => {
             const error = new Error();
             const pledge = new Pledge((resolve, reject) => {
                 reject(error);
             });
 
-            expect(pledge[state]).to.equal("rejected");
-            expect(pledge[result]).to.equal(error);
+            queueMicrotask(() => {
+                expect(pledge[state]).to.equal("rejected");
+                expect(pledge[result]).to.equal(error);
+                done();
+            });
         });
 
-        it("should be in the rejected state when the executor throws an error", () => {
+        it("should be in the rejected state when the executor throws an error", done => {
             const error = new Error();
-            const pledge = new Pledge((resolve, reject) => {
+            const pledge = new Pledge(() => {
                 throw error;
             });
 
-            expect(pledge[state]).to.equal("rejected");
-            expect(pledge[result]).to.equal(error);
+            queueMicrotask(() => {
+                expect(pledge[state]).to.equal("rejected");
+                expect(pledge[result]).to.equal(error);
+                done();
+            });
         });
 
 
