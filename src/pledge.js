@@ -1,18 +1,18 @@
 /**
+ * Pledge class
  * @fileoverview A custom promise solution.
  */
+
+//-----------------------------------------------------------------------------
+// Imports
+//-----------------------------------------------------------------------------
+
+import { PledgeSymbol } from "./pledge-symbol.js";
 
 //-----------------------------------------------------------------------------
 // Helpers
 //-----------------------------------------------------------------------------
 
-export const PledgeSymbol = Object.freeze({
-    state: Symbol("PledgeState"),
-    result: Symbol("PledgeResult"),
-    isHandled: Symbol("PledgeIsHandled"),
-    fulfillReactions: Symbol("PledgeFulfillReactions"),
-    rejectReactions: Symbol("PledgeRejectReactions")
-});
 
 //-----------------------------------------------------------------------------
 // Main
