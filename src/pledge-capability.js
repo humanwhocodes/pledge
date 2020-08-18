@@ -7,23 +7,16 @@
 // Imports
 //-----------------------------------------------------------------------------
 
-import { PledgeSymbol } from "./pledge-symbol.js";
 
 //-----------------------------------------------------------------------------
 // Main
 //-----------------------------------------------------------------------------
 
 export class PledgeCapability {
-
-    constructor(promise) {
-        this.promise = promise;
-        this.resolve = value => {
-            promise[PledgeSymbol.state] = "fulfilled";
-            promise[PledgeSymbol.result] = value;
-        };
-        this.reject = reason => {
-            promise[PledgeSymbol.state] = "rejected";
-            promise[PledgeSymbol.result] = reason;
-        };
+    constructor(PledgeConstructor) {
+        this.promise = new PledgeConstructor((resolve, reject) => {
+            this.resolve = resolve;
+            this.reject = reject;
+        });
     }
 }
