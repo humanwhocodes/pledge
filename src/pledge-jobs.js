@@ -7,6 +7,7 @@
 // Imports
 //-----------------------------------------------------------------------------
 
+import { createResolvingFunctions } from "./pledge.js";
 
 //-----------------------------------------------------------------------------
 // Exports
@@ -16,6 +17,20 @@ export function queuePledgeJob(job) {
     queueMicrotask(() => {
         job.call();
     });
+}
+
+export class PledgeResolveThenableJob {
+    constructor(pledgeToResolve, thenable, then) {
+        return () => {
+            const { resolve, reject } = createResolvingFunctions(pledgeToResolve);
+
+            try {
+                return then.call(thenable, resolve, reject);
+            } catch (thenError) {
+                reject.call(undefined, thenError);
+            }
+        };
+    }
 }
 
 export class PledgeReactionJob {

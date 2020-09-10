@@ -8,123 +8,25 @@
 //-----------------------------------------------------------------------------
 
 import { PledgeSymbol } from "./pledge-symbol.js";
-import { PledgeCapability } from "./pledge-capability.js";
-import { PledgeFulfillReaction, PledgeRejectReaction } from "./pledge-reactions.js";
 import { PledgeReactionJob, queuePledgeJob } from "./pledge-jobs.js";
+import {
+    isPledge,
+    createResolvingFunctions,
+    PledgeFulfillReaction,
+    PledgeRejectReaction,
+    PledgeCapability
+} from "./pledge-operations.js";
 
 //-----------------------------------------------------------------------------
 // Helpers
 //-----------------------------------------------------------------------------
 
 function assertIsPledge(pledge) {
-    if (!(pledge instanceof Pledge)) {
+    if (!isPledge(pledge)) {
         throw new TypeError("Value must be an instance of Pledge.");
     }
 }
 
-function triggerPledgeReactions(reactions, reason) {
-
-}
-
-function rejectPledge(pledge, reason) {
-
-    if (pledge[PledgeSymbol.state] !== "pending") {
-        throw new Error("Pledge is already settled.");
-    }
-
-    const reactions = pledge[PledgeSymbol.rejectReactions];
-
-    pledge[PledgeSymbol.result] = reason;
-    pledge[PledgeSymbol.fulfillReactions] = undefined;
-    pledge[PledgeSymbol.rejectReactions] = undefined;
-    pledge[PledgeSymbol.state] = "rejected";
-
-    // global rejection tracking
-    if (!pledge[PledgeSymbol.isHandled]) {
-        // TODO: perform HostPromiseRejectionTracker(promise, "reject").
-    }
-
-    return triggerPledgeReactions(reactions, reason).
-}
-
-function fulfillPledge(pledge, value) {
-
-    if (pledge[PledgeSymbol.state] !== "pending") {
-        throw new Error("Pledge is already settled.");
-    }
-
-    const reactions = pledge[PledgeSymbol.rejectReactions];
-
-    pledge[PledgeSymbol.result] = value;
-    pledge[PledgeSymbol.fulfillReactions] = undefined;
-    pledge[PledgeSymbol.rejectReactions] = undefined;
-    pledge[PledgeSymbol.state] = "fulfilled";
-
-    return triggerPledgeReactions(reactions, value).
-}
-
-function createResolvingFunctions(pledge) {
-    
-    let alreadyResolved = { value: false };
-    
-    let resolve = (resolution) => {
-
-        // if the pledge is already resolved, don't do anything
-        if (alreadyResolved.value) {
-            return;
-        }
-
-        // mark as resolved to avoid further changes
-        alreadyResolved.value = true;
-
-        // can't resolve to the same pledge
-        if (resolution === pledge) {
-            const selfResolutionError = new TypeError("Cannot resolve to self.");
-            return rejectPledge(pledge, selfResolutionError)
-        }
-        
-        if (typeof resolution !== "object" || resolution === null) {
-            return fulfillPledge(pledge, resolution);
-        }
-
-        // If we've made it here, `resolution` is an object
-        const then = resolution.then;
-
-        // If then is an abrupt completion, then
-
-        // Return RejectPromise(promise, then.[[Value]]).
-
-        const thenAction = then.value;
-        if (typeof thenAction !== "function") {
-            return fulfillPledge(pledge, resolution);
-        }
-
-        const job = () => {
-            thenAction.call(then, resolution);
-        };
-        Let job be NewPromiseResolveThenableJob(promise, resolution, thenAction).
-        Perform HostEnqueuePromiseJob(job.[[Job]], job.[[Realm]]).
-
-    };
-
-    resolve.promise = promise;
-    resolve.alreadyResolved = alreadyResolved;
-    Let alreadyResolved be the Record { [[Value]]: false }.
-    Let stepsResolve be the algorithm steps defined in Promise Resolve Functions.
-    Let resolve be! CreateBuiltinFunction(stepsResolve, «[[Promise]], [[AlreadyResolved]]»).
-    Set resolve.[[Promise]] to promise.
-    Set resolve.[[AlreadyResolved]] to alreadyResolved.
-    Let stepsReject be the algorithm steps defined in Promise Reject Functions.
-    Let reject be! CreateBuiltinFunction(stepsReject, «[[Promise]], [[AlreadyResolved]]»).
-    
-    reject.promise = promise;
-    reject.alreadyResolved = alreadyResolved;
-    
-    return {
-        resolve,
-        reject
-    };
-}
 
 function performPledgeThen(pledge, onFulfilled, onRejected, resultCapability) {
     assertIsPledge(pledge);
@@ -138,7 +40,7 @@ function performPledgeThen(pledge, onFulfilled, onRejected, resultCapability) {
     }
 
     const fulfillReaction = new PledgeFulfillReaction(resultCapability, onFulfilled);
-    const rejectReaction = new PledgeFulfillReaction(resultCapability, onRejected);
+    const rejectReaction = new PledgeRejectReaction(resultCapability, onRejected);
 
     switch (pledge[PledgeSymbol.state]) {
 
