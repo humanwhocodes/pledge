@@ -181,12 +181,12 @@ export function fulfillPledge(pledge, value) {
 // 25.6.1.6 IsPromise(x)
 //-----------------------------------------------------------------------------
 
-export function isPledge(value) {
-    if (typeof value !== "object" && value !== null) {
+export function isPledge(x) {
+    if (typeof x !== "object" && x !== null) {
         return false;
     }
 
-    return PledgeSymbol.state in value;
+    return PledgeSymbol.state in x;
 }
 
 //-----------------------------------------------------------------------------

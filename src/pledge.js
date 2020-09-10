@@ -27,53 +27,8 @@ function assertIsPledge(pledge) {
     }
 }
 
-
-function performPledgeThen(pledge, onFulfilled, onRejected, resultCapability) {
-    assertIsPledge(pledge);
-
-    if (typeof onFulfilled !== "function") {
-        onFulfilled = undefined;
-    }
-
-    if (typeof onRejected !== "function") {
-        onRejected = undefined;
-    }
-
-    const fulfillReaction = new PledgeFulfillReaction(resultCapability, onFulfilled);
-    const rejectReaction = new PledgeRejectReaction(resultCapability, onRejected);
-
-    switch (pledge[PledgeSymbol.state]) {
-
-        case "pending":
-            pledge[PledgeSymbol.fulfillReactions].push(fulfillReactions);
-            pledge[PledgeSymbol.rejectReactions].push(rejectReactions);
-            break;
-
-        case "fulfilled":
-            const value = pledge[PledgeSymbol.result];
-            const fulfillJob = new PledgeReactionJob(fulfillReactions, value);
-            queuePledgeJob(fulfillJob);
-            break;
-            
-        case "rejected":
-            const reason = pledge[PledgeSymbol.result];
-            const rejectJob = new PledgeReactionJob(rejectReactions, reason);
-            // TODO: if [[isHandled]] if false
-            queuePledgeJob(rejectJob);                
-            break;
-
-        default:
-            throw new TypeError(`Invalid pledge state: ${ pledge[PledgeSymbol.state] }.`);
-    }
-
-    pledge[PledgeSymbol.isHandled] = true;
-
-    return resultCapability ? resultCapability.pledge : undefined;
-
-}
-
 //-----------------------------------------------------------------------------
-// Main
+// 25.6.3 - 25.6.5
 //-----------------------------------------------------------------------------
 
 export class Pledge {
@@ -146,8 +101,87 @@ export class Pledge {
         return this.then(null, rejectionHandler);
     }
 
-    finally(settlementHandler) {
-        const wrappedHandler = () => settlementHandler();
-        return this.then(wrappedHandler, wrappedHandler);
+    finally(onFinally) {
+        assertIsPledge(this);
+
+        const speciesConstructor = this.constructor[Symbol.species];
+        let thenFinally, catchFinally;
+
+        if (typeof onFinally !== "function") {
+            thenFinally = onFinally;
+            catchFinally = onFinally;
+        } else {
+
+            thenFinally = value => {
+                const result = onFinally();
+                const pledge = pledgeResolve(speciesConstructor, result);
+                const valueThunk = () => value;
+                return pledge.then(valueThunk);
+            };
+
+            catchFinally = reason => {
+                const result = onFinally();
+                const pledge = pledgeResolve(speciesConstructor, result);
+                const thrower = () => {
+                    throw reason;
+                };
+                return pledge.then(thrower);
+            };
+        }
+
+        this.then(thenFinally, catchFinally);
     }
+}
+
+
+//-----------------------------------------------------------------------------
+// 25.6.5.4.1 PerformPromiseThen(promise, onFulfilled, onRejected,
+//              resultCapability)
+//-----------------------------------------------------------------------------
+
+function performPledgeThen(pledge, onFulfilled, onRejected, resultCapability) {
+    assertIsPledge(pledge);
+
+    if (typeof onFulfilled !== "function") {
+        onFulfilled = undefined;
+    }
+
+    if (typeof onRejected !== "function") {
+        onRejected = undefined;
+    }
+
+    const fulfillReaction = new PledgeFulfillReaction(resultCapability, onFulfilled);
+    const rejectReaction = new PledgeRejectReaction(resultCapability, onRejected);
+
+    switch (pledge[PledgeSymbol.state]) {
+
+        case "pending":
+            pledge[PledgeSymbol.fulfillReactions].push(fulfillReaction);
+            pledge[PledgeSymbol.rejectReactions].push(rejectReaction);
+            break;
+
+        case "fulfilled": 
+            {
+                const value = pledge[PledgeSymbol.result];
+                const fulfillJob = new PledgeReactionJob(fulfillReaction, value);
+                queuePledgeJob(fulfillJob);
+            }
+            break;
+
+        case "rejected":
+            {
+                const reason = pledge[PledgeSymbol.result];
+                const rejectJob = new PledgeReactionJob(rejectReaction, reason);
+                // TODO: if [[isHandled]] if false
+                queuePledgeJob(rejectJob);
+            }
+            break;
+
+        default:
+            throw new TypeError(`Invalid pledge state: ${pledge[PledgeSymbol.state]}.`);
+    }
+
+    pledge[PledgeSymbol.isHandled] = true;
+
+    return resultCapability ? resultCapability.pledge : undefined;
 }
