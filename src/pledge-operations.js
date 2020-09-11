@@ -79,7 +79,7 @@ export class PledgeRejectReaction extends PledgeReaction {
 }
 
 //-----------------------------------------------------------------------------
-// 25.6.1.3 CreateResolvingFunctions(promise)
+// 25.6.1.3 CreateResolvingFunctions( promise )
 //-----------------------------------------------------------------------------
 
 export function createResolvingFunctions(pledge) {

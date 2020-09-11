@@ -8,7 +8,7 @@
 //-----------------------------------------------------------------------------
 
 import { PledgeSymbol } from "./pledge-symbol.js";
-import { PledgeReactionJob, queuePledgeJob } from "./pledge-jobs.js";
+import { PledgeReactionJob, hostEnqueuePledgeJob } from "./pledge-jobs.js";
 import { isObject, isCallable, sameValue } from "./utilities.js";
 import {
     isPledge,
@@ -171,7 +171,7 @@ function performPledgeThen(pledge, onFulfilled, onRejected, resultCapability) {
             {
                 const value = pledge[PledgeSymbol.result];
                 const fulfillJob = new PledgeReactionJob(fulfillReaction, value);
-                queuePledgeJob(fulfillJob);
+                hostEnqueuePledgeJob(fulfillJob);
             }
             break;
 
@@ -180,7 +180,7 @@ function performPledgeThen(pledge, onFulfilled, onRejected, resultCapability) {
                 const reason = pledge[PledgeSymbol.result];
                 const rejectJob = new PledgeReactionJob(rejectReaction, reason);
                 // TODO: if [[isHandled]] if false
-                queuePledgeJob(rejectJob);
+                hostEnqueuePledgeJob(rejectJob);
             }
             break;
 

@@ -7,7 +7,7 @@
 // Imports
 //-----------------------------------------------------------------------------
 
-import { createResolvingFunctions } from "./pledge.js";
+import { createResolvingFunctions } from "./pledge-operations.js";
 
 //-----------------------------------------------------------------------------
 // 8.4.1 HostEnqueuePromiseJob ( job, realm )

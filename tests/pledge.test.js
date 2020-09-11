@@ -60,6 +60,29 @@ describe("Pledge", () => {
             expect(pledge[PledgeSymbol.result]).to.equal(error);
         });
 
+        it("should be in the fulfilled PledgeSymbol.state when the executor calls resolve() with another pledege that is fulfilled", done => {
+
+            const pledge1 = new Pledge(resolve => {
+                resolve(42);
+            });
+
+            const pledge2 = new Pledge(resolve => {
+                resolve(pledge1);
+            });
+
+            // first we should be in the pending state
+            expect(pledge2[PledgeSymbol.state]).to.equal("pending");
+            expect(pledge2[PledgeSymbol.result]).to.be.undefined;
+
+            // then we should be in the fulfilled state
+            queueMicrotask(() => {
+                expect(pledge2[PledgeSymbol.state]).to.equal("fulfilled");
+                expect(pledge2[PledgeSymbol.result]).to.equal(42);
+                done();
+            });
+        });
+
+
     });
 
 });
