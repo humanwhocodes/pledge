@@ -9,6 +9,7 @@
 
 import { PledgeSymbol } from "./pledge-symbol.js";
 import { PledgeReactionJob, queuePledgeJob } from "./pledge-jobs.js";
+import { isObject, isCallable, sameValue } from "./utilities.js";
 import {
     isPledge,
     createResolvingFunctions,
@@ -20,6 +21,12 @@ import {
 //-----------------------------------------------------------------------------
 // Helpers
 //-----------------------------------------------------------------------------
+
+function assertIsObject(value) {
+    if (!isObject(value)) {
+        throw new TypeError("Value must be an object.");
+    }
+}
 
 function assertIsPledge(pledge) {
     if (!isPledge(pledge)) {
@@ -38,7 +45,7 @@ export class Pledge {
             throw new TypeError("Executor missing.");
         }
 
-        if (typeof executor !== "function") {
+        if (!isCallable(executor)) {
             throw new TypeError("Executor must be a function.");
         }
 
@@ -68,22 +75,22 @@ export class Pledge {
         return this;
     }
 
-    static resolve(value) {
-        if (value instanceof Pledge && this === value.constructor) {
-            return value;
+    static resolve(x) {
+
+        const C = this;
+
+        if (!isObject(C)) {
+            throw new TypeError("Cannot call resolve() without `this` value.");
         }
 
-        const capability = new PledgeCapability(this);
-        capability.resolve(value);
-        return capability.pledge;
+        return pledgeResolve(C, x);
     }
 
     static reject(reason) {
-        if (reason instanceof Pledge && this === reason.constructor) {
-            return reason;
-        }
+        
+        const C = this;
 
-        const capability = new PledgeCapability(this);
+        const capability = new PledgeCapability(C);
         capability.reject(reason);
         return capability.pledge;
     }
@@ -92,8 +99,8 @@ export class Pledge {
 
         assertIsPledge(this);
 
-        const speciesConstructor = this.constructor[Symbol.species];
-        const capability = new PledgeCapability(speciesConstructor);
+        const C = this.constructor[Symbol.species];
+        const capability = new PledgeCapability(C);
         return performPledgeThen(this, onFulfilled, onRejected, capability);
     }
 
@@ -104,24 +111,24 @@ export class Pledge {
     finally(onFinally) {
         assertIsPledge(this);
 
-        const speciesConstructor = this.constructor[Symbol.species];
+        const C = this.constructor[Symbol.species];
         let thenFinally, catchFinally;
 
-        if (typeof onFinally !== "function") {
+        if (!isCallable(onFinally)) {
             thenFinally = onFinally;
             catchFinally = onFinally;
         } else {
 
             thenFinally = value => {
                 const result = onFinally();
-                const pledge = pledgeResolve(speciesConstructor, result);
+                const pledge = pledgeResolve(C, result);
                 const valueThunk = () => value;
                 return pledge.then(valueThunk);
             };
 
             catchFinally = reason => {
                 const result = onFinally();
-                const pledge = pledgeResolve(speciesConstructor, result);
+                const pledge = pledgeResolve(C, result);
                 const thrower = () => {
                     throw reason;
                 };
@@ -142,11 +149,11 @@ export class Pledge {
 function performPledgeThen(pledge, onFulfilled, onRejected, resultCapability) {
     assertIsPledge(pledge);
 
-    if (typeof onFulfilled !== "function") {
+    if (!isCallable(onFulfilled)) {
         onFulfilled = undefined;
     }
 
-    if (typeof onRejected !== "function") {
+    if (!isCallable(onRejected)) {
         onRejected = undefined;
     }
 
@@ -184,4 +191,25 @@ function performPledgeThen(pledge, onFulfilled, onRejected, resultCapability) {
     pledge[PledgeSymbol.isHandled] = true;
 
     return resultCapability ? resultCapability.pledge : undefined;
+}
+
+//-----------------------------------------------------------------------------
+// 25.6.4.6.1 PromiseResolve(C, x)
+//-----------------------------------------------------------------------------
+
+function pledgeResolve(C, x) {
+
+    assertIsObject(C);
+
+    if (isPledge(x)) {
+        const xConstructor = x.constructor;
+
+        if (sameValue(xConstructor, C)) {
+            return x;
+        }
+
+        const pledgeCapability = new PledgeCapability(C);
+        pledgeCapability.resolve(x);
+        return pledgeCapability.pledge;
+    }
 }

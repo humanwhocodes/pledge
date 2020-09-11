@@ -8,6 +8,7 @@
 
 import { PledgeSymbol } from "./pledge-symbol.js";
 import { PledgeResolveThenableJob, queuePledgeJob } from "./pledge-jobs.js";
+import { isObject, isCallable, sameValue } from "./utilities.js";
 
 //-----------------------------------------------------------------------------
 // Helpers
@@ -21,14 +22,31 @@ export function assertIsPledge(value) {
 
 //-----------------------------------------------------------------------------
 // 25.6.1.1 PromiseCapability Records
+// 25.6.1.5 NewPromiseCapability(C)
 //-----------------------------------------------------------------------------
 
 export class PledgeCapability {
-    constructor(PledgeConstructor) {
-        this.pledge = new PledgeConstructor((resolve, reject) => {
+
+    /**
+     * To make things more idiomatic, this constructor is used to create a
+     * new `PledgeCapability` instead of creating a separate function as
+     * defined in the spec. The constructor performs all of the checks
+     * defined in NewPromiseCapability. 
+     * @param {Function} C A constructor function, presumed to be a Pledge. 
+     */
+    constructor(C) {
+        this.pledge = new C((resolve, reject) => {
             this.resolve = resolve;
             this.reject = reject;
         });
+
+        if (!isCallable(this.resolve)) {
+            throw new TypeError("resolve function is not callable.");
+        }
+
+        if (!isCallable(this.reject)) {
+            throw new TypeError("reject function is not callable.");
+        }
     }
 }
 
@@ -81,12 +99,12 @@ export function createResolvingFunctions(pledge) {
         alreadyResolved.value = true;
 
         // can't resolve to the same pledge
-        if (resolution === pledge) {
+        if (sameValue(resolution, pledge)) {
             const selfResolutionError = new TypeError("Cannot resolve to self.");
             return rejectPledge(pledge, selfResolutionError);
         }
 
-        if (typeof resolution !== "object" || resolution === null) {
+        if (!isObject(resolution)) {
             return fulfillPledge(pledge, resolution);
         }
 
@@ -108,7 +126,7 @@ export function createResolvingFunctions(pledge) {
         }
 
         // if the thenAction isn't callable then fulfill the pledge
-        if (typeof thenAction !== "function") {
+        if (!isCallable(thenAction)) {
             return fulfillPledge(pledge, resolution);
         }
 
@@ -182,7 +200,7 @@ export function fulfillPledge(pledge, value) {
 //-----------------------------------------------------------------------------
 
 export function isPledge(x) {
-    if (typeof x !== "object" && x !== null) {
+    if (!isObject(x)) {
         return false;
     }
 
