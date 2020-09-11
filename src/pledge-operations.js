@@ -7,7 +7,11 @@
 //-----------------------------------------------------------------------------
 
 import { PledgeSymbol } from "./pledge-symbol.js";
-import { PledgeResolveThenableJob, queuePledgeJob } from "./pledge-jobs.js";
+import {
+    PledgeResolveThenableJob,
+    PledgeReactionJob,
+    hostEnqueuePledgeJob
+} from "./pledge-jobs.js";
 import { isObject, isCallable, sameValue } from "./utilities.js";
 
 //-----------------------------------------------------------------------------
@@ -80,9 +84,9 @@ export class PledgeRejectReaction extends PledgeReaction {
 
 export function createResolvingFunctions(pledge) {
 
-    let alreadyResolved = { value: false };
+    const alreadyResolved = { value: false };
 
-    let resolve = resolution => {
+    const resolve = resolution => {
 
         /*
         * Here, the spec says to check that the function has a `promise`
@@ -134,14 +138,19 @@ export function createResolvingFunctions(pledge) {
          * If `thenAction` is callable, then we need to wait for the thenable
          * to resolve before we can resolve this pledge.
          */
-        let job = new PledgeResolveThenableJob(pledge, resolution, thenAction);
-        queuePledgeJob(job);
+        const job = new PledgeResolveThenableJob(pledge, resolution, thenAction);
+        hostEnqueuePledgeJob(job);
     };
 
+    /*
+    * Included for completeness with the spec but are unnecessary
+    * in this implementation due to using a closure to capture these
+    * data.
+    */
     resolve.pledge = pledge;
     resolve.alreadyResolved = alreadyResolved;
 
-    let reject = reason => {
+    const reject = reason => {
 
         /*
          * Here, the spec says to check that the function has a `promise`
@@ -160,6 +169,11 @@ export function createResolvingFunctions(pledge) {
         return rejectPledge(pledge, reason);
     };
 
+    /*
+     * Included for completeness with the spec but are unnecessary
+     * in this implementation due to using a closure to capture these
+     * data.
+     */
     reject.pledge = pledge;
     reject.alreadyResolved = alreadyResolved;
 
@@ -193,7 +207,10 @@ export function fulfillPledge(pledge, value) {
 // 25.6.1.5 NewPromiseCapability(C)
 //-----------------------------------------------------------------------------
 
-// TODO
+/*
+ * Instead of creating a standalone function for this, I'm using the
+ * `Pledge` class constructor.
+ */
 
 //-----------------------------------------------------------------------------
 // 25.6.1.6 IsPromise(x)
@@ -237,7 +254,12 @@ export function rejectPledge(pledge, reason) {
 //-----------------------------------------------------------------------------
 
 export function triggerPledgeReactions(reactions, argument) {
-    // TODO
+
+    for (const reaction of reactions) {
+        const job = new PledgeReactionJob(reaction, argument);
+        hostEnqueuePledgeJob(job);
+    }
+
 }
 
 //-----------------------------------------------------------------------------

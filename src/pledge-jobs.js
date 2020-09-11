@@ -13,7 +13,7 @@ import { createResolvingFunctions } from "./pledge.js";
 // Exports
 //-----------------------------------------------------------------------------
 
-export function queuePledgeJob(job) {
+export function hostEnqueuePledgeJob(job) {
     queueMicrotask(() => {
         job.call();
     });
