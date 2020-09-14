@@ -1,4 +1,4 @@
-# Env utility
+# Pledge
 
 by [Nicholas C. Zakas](https://humanwhocodes.com)
 
@@ -6,7 +6,13 @@ If you find this useful, please consider supporting my work with a [donation](ht
 
 ## Description
 
-A utility for verifying that environment variables are present in Node.js and Deno. The main use case is to easily throw an error when an environment variable is missing. This is most useful immediately after a Node.js or Deno program has been initiated, to fail fast and let you know that environment variables haven't been setup correctly.
+An implementation of JavaScript promises that matches the [ECMA-262](https://www.ecma-international.org/ecma-262/11.0/index.html#sec-promise-objects) specification as closely as possible. Some differences:
+
+1. Intentionally does not address `Realm` concerns as this isn't important to understanding promises.
+2. In order to make things more "JavaScripty", some functions in the specification are represented as classes in this package.
+3. Where variable names were too confusing, I chose to replace them with more meaningful names.
+
+**Note:** This package is intended only for educational purposes and should not be used in production. There's no reason to use this package because the JavaScript `Promise` class already implements all of this functionality.
 
 ## Usage
 
@@ -15,114 +21,82 @@ A utility for verifying that environment variables are present in Node.js and De
 Install using [npm][npm] or [yarn][yarn]:
 
 ```
-npm install @humanwhocodes/env --save
+npm install @humanwhocodes/pledge --save
 
 # or
 
-yarn add @humanwhocodes/env
+yarn add @humanwhocodes/pledge
 ```
 
 Import into your Node.js project:
 
 ```js
 // CommonJS
-const { Env } = require("@humanwhocodes/env");
+const { Pledge } = require("@humanwhocodes/pledge");
 
 // ESM
-import { Env } from "@humanwhocodes/env";
+import { Pledge } from "@humanwhocodes/pledge";
 ```
-
-By default, an `Env` instance will read from `process.env`.
 
 ### Deno
 
 Import into your Deno project:
 
 ```js
-import { Env } from "https://unpkg.com/@humanwhocodes/env/dist/env.js";
+import { Pledge } from "https://unpkg.com/@humanwhocodes/pledge/dist/pledge.js";
 ```
-
-By default, an `Env` instance will read from `Deno.env()`.
 
 ### Browser
 
 It's recommended to import the minified version to save bandwidth:
 
 ```js
-import { Env } from "https://unpkg.com/@humanwhocodes/env/dist/env.min.js";
+import { Pledge } from "https://unpkg.com/@humanwhocodes/pledge/dist/pledge.min.js";
 ```
 
 However, you can also import the unminified version for debugging purposes:
 
 ```js
-import { Env } from "https://unpkg.com/@humanwhocodes/env/dist/env.js";
+import { Pledge } from "https://unpkg.com/@humanwhocodes/pledge/dist/pledge.js";
 ```
-
-By default, an `Env` instance will read from an empty object.
 
 ## API
 
-After importing, create a new instance of `Env` to start reading environment variables:
+After importing, create a new instance of `Pledge` and use it like a `Promise`:
 
 ```js
-const env = new Env();
+// basics
+const pledge = new Pledge((resolve, reject) => {
+    resolve(42);
 
-// read a variable and don't care if it's empty
-const username = env.get("USERNAME");
+    // or
 
-// read a variable and use a default if empty
-const username = env.get("USERNAME", "humanwhocodes");
-
-// determine if a variable exists
-const username = env.has("USERNAME");
-
-// read the first found variable and use a default is empty
-const username = env.first(["USERNAME", "USERNAME2"], "humanwhocodes");
-
-// read a variable and throw an error if it doesn't exist
-// or is an empty string
-const username = env.require("USERNAME");
-```
-
-To retrieve more than one required environment variable at one time, you can use the `required` property with destructuring assignment:
-
-```js
-const env = new Env();
-
-// throws if variables are undefined or an empty string
-const {
-    CLIENT_ID,
-    CLIENT_SECRET
-} = env.required;
-```
-
-In this example, an error is thrown if either `CLIENT_ID` or `CLIENT_SECRET` is missing or an empty string. The `required` property is a proxy object that throws an error whenever you attempt to access a property that doesn't exist.
-
-If you don't want to throw an error for environment variables containing an empty string, use the `exists` property:
-
-```js
-const env = new Env();
-
-// throws only if variables are not defined
-const {
-    CLIENT_ID,
-    CLIENT_SECRET
-} = env.exists;
-```
-
-You can also specify an alternate object to read variables from. This can be useful for testing or in the browser (where there is no environment variable to read from by default):
-
-```js
-const env = new Env({
-    USERNAME: "humanwhocodes"
+    reject(42);
 });
 
-// read a variable and don't care if it's empty
-const username = env.get("USERNAME");
+pledge.then(value => {
+    console.log(then);
+}).catch(reason => {
+    console.error(reason);
+}).finally(() => {
+    console.log("done");
+});
 
-// read a variable and throw an error if it doesn't exist
-const password = env.require("PASSWORD");
+// create resolved pledges
+const fulfilled = Pledge.resolve(42);
+const rejected = Pledge.reject(new Error("Uh oh!"));
 ```
+
+## Frequently Asked Questions (FAQ)
+
+### Why make this package?
+
+Promises have a lot of difficult concepts to understand, and sometimes the easiest way to understand difficult concepts is to put them into a familiar paradigm. In this case, creating an implementation of promises in JavaScript gave me a better understanding of how they work, and hopefully, they will help others understand them better, too.
+
+### Why doesn't this include `all()`, `race()`, `allSettled()`, and `any()`?
+
+These are all just different ways to mix and match multiple promises, and my immediate goal was to get a basic understanding of dealing with one promise at a time. If you'd like me to implement these, please consider [donating](https://github.com/sponsors/nzakas).
+
 
 [npm]: https://npmjs.com/
 [yarn]: https://yarnpkg.com/
