@@ -8,8 +8,10 @@
 //-----------------------------------------------------------------------------
 
 import {
+    assertIsPledge,
     createResolvingFunctions,
-    fulfillPledge
+    fulfillPledge,
+    PledgeCapability
 } from "../src/pledge-operations.js";
 import { Pledge } from "../src/pledge.js";
 import { PledgeSymbol } from "../src/pledge-symbol.js";
@@ -19,6 +21,58 @@ import { expect } from "chai";
 // Tests
 //-----------------------------------------------------------------------------
 describe("pledge-operations", () => {
+
+    describe("assertIsPledge", () => {
+
+        it("should throw an error when a value is a non-Pledge object", () => {
+            expect(() => {
+                assertIsPledge({});
+            }).to.throw(/Value must be a Pledge/);
+        });
+
+        it("should throw an error when a value is a primitive", () => {
+            expect(() => {
+                assertIsPledge(42);
+            }).to.throw(/Value must be a Pledge/);
+
+            expect(() => {
+                assertIsPledge("");
+            }).to.throw(/Value must be a Pledge/);
+            
+            expect(() => {
+                assertIsPledge(true);
+            }).to.throw(/Value must be a Pledge/);
+            
+            expect(() => {
+                assertIsPledge(Symbol());
+            }).to.throw(/Value must be a Pledge/);
+        });
+    });
+
+    describe("new PledgeCapability()", () => {
+
+        it("should throw an error when an arrow function is passed", () => {
+            expect(() => {
+                new PledgeCapability(() => {});
+            }).to.throw(/C is not a constructor/);
+        });
+
+        it("should throw an error when a regular function is passed", () => {
+            expect(() => {
+                new PledgeCapability(function() {});
+            }).to.throw(/resolve function is not callable/);
+        });
+
+        it("should throw an error when a regular function is passed without a reject parameter", () => {
+            function FakePledge(executor) {
+                executor(() => {});
+            }
+
+            expect(() => {
+                new PledgeCapability(FakePledge);
+            }).to.throw(/reject function is not callable/);
+        });
+    });
 
     describe("createResolvingFunctions()", () => {
         describe("resolve()", () => {

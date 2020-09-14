@@ -12,7 +12,7 @@ import {
     PledgeReactionJob,
     hostEnqueuePledgeJob
 } from "./pledge-jobs.js";
-import { isObject, isCallable, sameValue, call } from "./utilities.js";
+import { isObject, isCallable, sameValue } from "./utilities.js";
 
 //-----------------------------------------------------------------------------
 // Helpers
@@ -20,7 +20,7 @@ import { isObject, isCallable, sameValue, call } from "./utilities.js";
 
 export function assertIsPledge(value) {
     if (!isPledge(value)) {
-        throw new TypeError("Value must be an instance of Pledge.");
+        throw new TypeError("Value must be a Pledge.");
     }
 }
 
@@ -87,7 +87,7 @@ export function createResolvingFunctions(pledge) {
     const alreadyResolved = { value: false };
 
     const resolve = resolution => {
-        
+
         /*
         * Here, the spec says to check that the function has a `promise`
         * property that is an object. We can skip that because this is a
