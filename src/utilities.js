@@ -18,3 +18,11 @@ export function isCallable(argument) {
 export function sameValue(x, y) {
     return Object.is(x, y);
 }
+
+export function call(F, V, ...argumentsList) {
+    if (!isCallable(F)) {
+        throw new TypeError("Function is not callable.");
+    }
+
+    return F.call(V, ...argumentsList);
+}

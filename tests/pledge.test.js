@@ -75,14 +75,98 @@ describe("Pledge", () => {
             expect(pledge2[PledgeSymbol.result]).to.be.undefined;
 
             // then we should be in the fulfilled state
-            queueMicrotask(() => {
+            setTimeout(() => {
                 expect(pledge2[PledgeSymbol.state]).to.equal("fulfilled");
                 expect(pledge2[PledgeSymbol.result]).to.equal(42);
                 done();
-            });
+            }, 0);
         });
 
 
+    });
+
+    describe("then()", () => {
+
+        it("register a fulfillment handler when called with one argument in fulfilled state", done => {
+            const pledge = new Pledge(resolve => {
+                resolve(42);
+            });
+
+            pledge.then(value => {
+                expect(value).to.equal(42);
+                done();
+            });
+
+        });
+
+        it("register a fulfillment handler when called with one argument in pending state", done => {
+            const pledge = new Pledge(resolve => {
+                setTimeout(() => {
+                    resolve(42);
+                }, 100);
+            });
+
+            pledge.then(value => {
+                expect(value).to.equal(42);
+                done();
+            });
+
+        });
+
+        it("register a rejection handler when called with one argument in rejected state", done => {
+            const pledge = new Pledge((resolve, reject) => {
+                reject(42);
+            });
+
+            pledge.then(undefined, value => {
+                expect(value).to.equal(42);
+                done();
+            });
+
+        });
+
+        it("register a rejection handler when called with one argument in pending state", done => {
+            const pledge = new Pledge((resolve, reject) => {
+                setTimeout(() => {
+                    reject(42);
+                }, 100);
+            });
+
+            pledge.then(undefined, value => {
+                expect(value).to.equal(42);
+                done();
+            });
+
+        });
+    });
+
+    describe("catch()", () => {
+
+        it("register a rejection handler when called in rejected state", done => {
+            const pledge = new Pledge((resolve, reject) => {
+                reject(42);
+            });
+
+            pledge.catch(value => {
+                expect(value).to.equal(42);
+                done();
+            });
+
+        });
+
+        it("register a rejection handler when called with one argument in pending state", done => {
+            const pledge = new Pledge((resolve, reject) => {
+                setTimeout(() => {
+                    reject(42);
+                }, 100);
+            });
+
+            pledge.catch(value => {
+                expect(value).to.equal(42);
+                done();
+            });
+
+        });
     });
 
 });

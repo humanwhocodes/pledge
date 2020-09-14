@@ -12,7 +12,7 @@ import {
     PledgeReactionJob,
     hostEnqueuePledgeJob
 } from "./pledge-jobs.js";
-import { isObject, isCallable, sameValue } from "./utilities.js";
+import { isObject, isCallable, sameValue, call } from "./utilities.js";
 
 //-----------------------------------------------------------------------------
 // Helpers
@@ -87,7 +87,7 @@ export function createResolvingFunctions(pledge) {
     const alreadyResolved = { value: false };
 
     const resolve = resolution => {
-
+        
         /*
         * Here, the spec says to check that the function has a `promise`
         * property that is an object. We can skip that because this is a
@@ -193,7 +193,7 @@ export function fulfillPledge(pledge, value) {
         throw new Error("Pledge is already settled.");
     }
 
-    const reactions = pledge[PledgeSymbol.rejectReactions];
+    const reactions = pledge[PledgeSymbol.fulfillReactions];
 
     pledge[PledgeSymbol.result] = value;
     pledge[PledgeSymbol.fulfillReactions] = undefined;

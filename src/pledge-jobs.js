@@ -8,6 +8,7 @@
 //-----------------------------------------------------------------------------
 
 import { createResolvingFunctions } from "./pledge-operations.js";
+import { call } from "./utilities.js";
 
 //-----------------------------------------------------------------------------
 // 8.4.1 HostEnqueuePromiseJob ( job, realm )
@@ -20,9 +21,7 @@ import { createResolvingFunctions } from "./pledge-operations.js";
  * @returns {void}
  */
 export function hostEnqueuePledgeJob(job) {
-    queueMicrotask(() => {
-        job.call();
-    });
+    queueMicrotask(job);
 }
 
 //-----------------------------------------------------------------------------
@@ -39,9 +38,9 @@ export class PledgeResolveThenableJob {
             const { resolve, reject } = createResolvingFunctions(pledgeToResolve);
 
             try {
-                return then.call(thenable, resolve, reject);
+                call(then, thenable, resolve, reject);
             } catch (thenError) {
-                reject.call(undefined, thenError);
+                call(reject, undefined, thenError);
             }
         };
     }
