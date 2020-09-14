@@ -5,7 +5,9 @@
   "main": "dist/pledge.cjs.js",
   "module": "dist/pledge.js",
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE"
   ],
   "publishConfig": {
     "access": "public"
@@ -18,7 +20,8 @@
     "build": "rollup -c",
     "prepare": "npm run build",
     "lint": "eslint src/ tests/",
-    "test": "npm run lint && mocha -r esm tests/"
+    "test:coverage": "nyc --include src/*.js npm run test",
+    "test": "mocha -r esm tests/"
   },
   "repository": {
     "type": "git",
@@ -35,6 +38,7 @@
     "eslint": "^5.16.0",
     "esm": "^3.2.25",
     "mocha": "^5.2.0",
+    "nyc": "^15.1.0",
     "rollup": "^1.20.3",
     "rollup-plugin-babel-minify": "^9.0.0"
   }
