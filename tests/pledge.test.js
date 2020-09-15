@@ -87,52 +87,164 @@ describe("Pledge", () => {
 
     describe("then()", () => {
 
-        it("register a fulfillment handler when called with one argument in fulfilled state", done => {
+        it("should register a fulfillment handler when called with one argument in fulfilled state", done => {
             const pledge = new Pledge(resolve => {
                 resolve(42);
             });
 
-            pledge.then(value => {
+            const result = pledge.then(value => {
                 expect(value).to.equal(42);
                 done();
             });
 
+            expect(result).to.be.instanceOf(Pledge);
+            expect(result[PledgeSymbol.state]).to.equal("pending");
         });
 
-        it("register a fulfillment handler when called with one argument in pending state", done => {
+        it("should register a fulfillment handler when called with one argument in pending state", done => {
             const pledge = new Pledge(resolve => {
                 setTimeout(() => {
                     resolve(42);
                 }, 100);
             });
 
-            pledge.then(value => {
+            const result = pledge.then(value => {
                 expect(value).to.equal(42);
                 done();
             });
 
+            expect(result).to.be.instanceOf(Pledge);
+            expect(result[PledgeSymbol.state]).to.equal("pending");
+
         });
 
-        it("register a rejection handler when called with one argument in rejected state", done => {
+        it("should register a rejection handler when called with one argument in rejected state", done => {
             const pledge = new Pledge((resolve, reject) => {
                 reject(42);
             });
 
-            pledge.then(undefined, value => {
+            const result = pledge.then(undefined, value => {
                 expect(value).to.equal(42);
                 done();
             });
 
+            expect(result).to.be.instanceOf(Pledge);
+            expect(result[PledgeSymbol.state]).to.equal("pending");
+
         });
 
-        it("register a rejection handler when called with one argument in pending state", done => {
+        it("should register a rejection handler when called with one argument in pending state", done => {
             const pledge = new Pledge((resolve, reject) => {
                 setTimeout(() => {
                     reject(42);
                 }, 100);
             });
 
-            pledge.then(undefined, value => {
+            const result = pledge.then(undefined, value => {
+                expect(value).to.equal(42);
+                done();
+            });
+
+            expect(result).to.be.instanceOf(Pledge);
+            expect(result[PledgeSymbol.state]).to.equal("pending");
+        });
+
+        it("should return a new pledge and calls its rejection handler when an error is thrown", done => {
+            const pledge = new Pledge((resolve, reject) => {
+                reject(42);
+            });
+
+            const error = new TypeError();
+
+            const result = pledge.then(undefined, () => {
+                throw error;
+            });
+
+            result.then(undefined, reason => {
+                expect(reason).to.equal(error);
+                done();
+            });
+
+        });
+
+        it("should return a new pledge and calls its fulfillment handler when a rejection handler succeeds", done => {
+            const pledge = new Pledge((resolve, reject) => {
+                reject(42);
+            });
+
+            const result = pledge.then(undefined, reason => {
+                return reason;
+            });
+
+            result.then(value => {
+                expect(value).to.equal(42);
+                done();
+            });
+
+        });
+
+    });
+
+    describe("catch()", () => {
+
+        it("should register a rejection handler when called in rejected state", done => {
+            const pledge = new Pledge((resolve, reject) => {
+                reject(42);
+            });
+
+            const result = pledge.catch(value => {
+                expect(value).to.equal(42);
+                done();
+            });
+
+            expect(result).to.be.instanceOf(Pledge);
+            expect(result[PledgeSymbol.state]).to.equal("pending");
+        });
+
+        it("should register a rejection handler when called with one argument in pending state", done => {
+            const pledge = new Pledge((resolve, reject) => {
+                setTimeout(() => {
+                    reject(42);
+                }, 100);
+            });
+
+            const result = pledge.catch(value => {
+                expect(value).to.equal(42);
+                done();
+            });
+
+            expect(result).to.be.instanceOf(Pledge);
+            expect(result[PledgeSymbol.state]).to.equal("pending");
+        });
+
+        it("should return a new pledge and calls its rejection handler when an error is thrown", done => {
+            const pledge = new Pledge((resolve, reject) => {
+                reject(42);
+            });
+
+            const error = new TypeError();
+
+            const result = pledge.catch(() => {
+                throw error;
+            });
+
+            result.catch(reason => {
+                expect(reason).to.equal(error);
+                done();
+            });
+
+        });
+
+        it("should return a new pledge and calls its fulfillment handler when a rejection handler succeeds", done => {
+            const pledge = new Pledge((resolve, reject) => {
+                reject(42);
+            });
+
+            const result = pledge.catch(reason => {
+                return reason;
+            });
+
+            result.then(value => {
                 expect(value).to.equal(42);
                 done();
             });
@@ -140,29 +252,65 @@ describe("Pledge", () => {
         });
     });
 
-    describe("catch()", () => {
+    describe("finally()", () => {
 
-        it("register a rejection handler when called in rejected state", done => {
+        it("should register a settlement  handler when called in rejected state", done => {
             const pledge = new Pledge((resolve, reject) => {
                 reject(42);
             });
 
-            pledge.catch(value => {
-                expect(value).to.equal(42);
+            const result = pledge.finally(() => {
                 done();
             });
 
+            expect(result).to.be.instanceOf(Pledge);
+            expect(result[PledgeSymbol.state]).to.equal("pending");
         });
 
-        it("register a rejection handler when called with one argument in pending state", done => {
+        it("should register a rejection handler when called with one argument in pending state", done => {
             const pledge = new Pledge((resolve, reject) => {
                 setTimeout(() => {
                     reject(42);
                 }, 100);
             });
 
-            pledge.catch(value => {
-                expect(value).to.equal(42);
+            const result = pledge.finally(() => {
+                done();
+            });
+
+            expect(result).to.be.instanceOf(Pledge);
+            expect(result[PledgeSymbol.state]).to.equal("pending");
+        });
+
+        it("should return a new pledge and calls its rejection handler when an error is thrown", done => {
+            const pledge = new Pledge((resolve, reject) => {
+                reject(42);
+            });
+
+            const error = new TypeError();
+
+            const result = pledge.finally(() => {
+                throw error;
+            });
+
+            result.catch(reason => {
+                expect(reason).to.equal(error);
+                done();
+            });
+
+        });
+
+        it("should return a new pledge and calls its rejection handler when a settlement handler succeeds", done => {
+            const pledge = new Pledge((resolve, reject) => {
+                reject(42);
+            });
+
+            const result = pledge.finally(() => {
+                return 43;
+            });
+
+            result.catch(reason => {
+                expect(reason).to.equal(42);
                 done();
             });
 

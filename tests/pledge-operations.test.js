@@ -49,28 +49,50 @@ describe("pledge-operations", () => {
         });
     });
 
-    describe("new PledgeCapability()", () => {
+    describe("PledgeCapability()", () => {
 
-        it("should throw an error when an arrow function is passed", () => {
-            expect(() => {
-                new PledgeCapability(() => {});
-            }).to.throw(/C is not a constructor/);
+        describe("new PledgeCapability()", () => {
+            it("should throw an error when an arrow function is passed", () => {
+                expect(() => {
+                    new PledgeCapability(() => {});
+                }).to.throw(/C is not a constructor/);
+            });
+    
+            it("should throw an error when a regular function is passed", () => {
+                expect(() => {
+                    new PledgeCapability(function() {});
+                }).to.throw(/resolve function is not callable/);
+            });
+    
+            it("should throw an error when a regular function is passed without a reject parameter", () => {
+                function FakePledge(executor) {
+                    executor(() => {});
+                }
+    
+                expect(() => {
+                    new PledgeCapability(FakePledge);
+                }).to.throw(/reject function is not callable/);
+            });
         });
 
-        it("should throw an error when a regular function is passed", () => {
-            expect(() => {
-                new PledgeCapability(function() {});
-            }).to.throw(/resolve function is not callable/);
+        describe("resolve()", () => {
+            it("should resolve the pledge when passed a value", () => {
+                const capability = new PledgeCapability(Pledge);
+                capability.resolve(42);
+
+                expect(capability.pledge[PledgeSymbol.state]).to.equal("fulfilled");
+                expect(capability.pledge[PledgeSymbol.result]).to.equal(42);
+            });
         });
 
-        it("should throw an error when a regular function is passed without a reject parameter", () => {
-            function FakePledge(executor) {
-                executor(() => {});
-            }
+        describe("reject()", () => {
+            it("should reject the pledge when passed a value", () => {
+                const capability = new PledgeCapability(Pledge);
+                capability.reject(42);
 
-            expect(() => {
-                new PledgeCapability(FakePledge);
-            }).to.throw(/reject function is not callable/);
+                expect(capability.pledge[PledgeSymbol.state]).to.equal("rejected");
+                expect(capability.pledge[PledgeSymbol.result]).to.equal(42);
+            });
         });
     });
 

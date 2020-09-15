@@ -36,11 +36,11 @@ export class PledgeResolveThenableJob {
     constructor(pledgeToResolve, thenable, then) {
         return () => {
             const { resolve, reject } = createResolvingFunctions(pledgeToResolve);
-
+            
             try {
-                call(then, thenable, resolve, reject);
+                call(then, thenable, [resolve, reject]);
             } catch (thenError) {
-                call(reject, undefined, thenError);
+                call(reject, undefined, [thenError]);
             }
         };
     }

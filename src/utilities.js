@@ -19,10 +19,15 @@ export function sameValue(x, y) {
     return Object.is(x, y);
 }
 
-export function call(F, V, ...argumentsList) {
+export function call(F, V, argumentsList = []) {
     if (!isCallable(F)) {
         throw new TypeError("Function is not callable.");
     }
 
-    return F.call(V, ...argumentsList);
+    return F.apply(V, argumentsList);
+}
+
+export function invoke(V, P, argumentsList = []) {
+    const func = V[P];
+    return call(func, V, argumentsList);
 }
