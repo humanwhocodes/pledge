@@ -12,7 +12,7 @@ import {
     PledgeReactionJob,
     hostEnqueuePledgeJob
 } from "./pledge-jobs.js";
-import { isObject, isCallable, sameValue } from "./utilities.js";
+import { isObject, isCallable } from "./utilities.js";
 
 //-----------------------------------------------------------------------------
 // Helpers
@@ -103,7 +103,7 @@ export function createResolvingFunctions(pledge) {
         alreadyResolved.value = true;
 
         // can't resolve to the same pledge
-        if (sameValue(resolution, pledge)) {
+        if (Object.is(resolution, pledge)) {
             const selfResolutionError = new TypeError("Cannot resolve to self.");
             return rejectPledge(pledge, selfResolutionError);
         }

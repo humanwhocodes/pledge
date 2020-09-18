@@ -9,7 +9,7 @@
 
 import { PledgeSymbol } from "./pledge-symbol.js";
 import { PledgeReactionJob, hostEnqueuePledgeJob } from "./pledge-jobs.js";
-import { isObject, isCallable, sameValue, call, invoke } from "./utilities.js";
+import { isObject, isCallable, call } from "./utilities.js";
 import {
     isPledge,
     createResolvingFunctions,
@@ -204,7 +204,7 @@ function pledgeResolve(C, x) {
     if (isPledge(x)) {
         const xConstructor = x.constructor;
 
-        if (sameValue(xConstructor, C)) {
+        if (Object.is(xConstructor, C)) {
             return x;
         }
     }
