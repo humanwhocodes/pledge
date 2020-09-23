@@ -14,11 +14,3 @@ export function isObject(argument) {
 export function isCallable(argument) {
     return typeof argument === "function";
 }
-
-export function call(F, V, argumentsList = []) {
-    if (!isCallable(F)) {
-        throw new TypeError("Function is not callable.");
-    }
-
-    return F.apply(V, argumentsList);
-}

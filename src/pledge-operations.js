@@ -39,10 +39,16 @@ export class PledgeCapability {
      * @param {Function} C A constructor function, presumed to be a Pledge. 
      */
     constructor(C) {
-        this.pledge = new C((resolve, reject) => {
+
+        const executor = (resolve, reject) => {
             this.resolve = resolve;
             this.reject = reject;
-        });
+        };
+
+        // not used but included for completeness with spec
+        executor.capability = this;
+
+        this.pledge = new C(executor);
 
         if (!isCallable(this.resolve)) {
             throw new TypeError("resolve function is not callable.");

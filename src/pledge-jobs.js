@@ -8,7 +8,6 @@
 //-----------------------------------------------------------------------------
 
 import { createResolvingFunctions } from "./pledge-operations.js";
-import { call } from "./utilities.js";
 
 //-----------------------------------------------------------------------------
 // 8.4.1 HostEnqueuePromiseJob ( job, realm )
@@ -38,9 +37,11 @@ export class PledgeResolveThenableJob {
             const { resolve, reject } = createResolvingFunctions(pledgeToResolve);
             
             try {
-                call(then, thenable, [resolve, reject]);
+                // same as thenable.then(resolve, reject)
+                then.apply(thenable, [resolve, reject]);
             } catch (thenError) {
-                call(reject, undefined, [thenError]);
+                // same as reject(thenError)
+                reject.apply(undefined, [thenError]);
             }
         };
     }
