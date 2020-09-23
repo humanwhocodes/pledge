@@ -51,11 +51,11 @@ export class PledgeCapability {
         this.pledge = new C(executor);
 
         if (!isCallable(this.resolve)) {
-            throw new TypeError("resolve function is not callable.");
+            throw new TypeError("resolve is not callable.");
         }
 
         if (!isCallable(this.reject)) {
-            throw new TypeError("reject function is not callable.");
+            throw new TypeError("reject is not callable.");
         }
     }
 }

@@ -61,7 +61,7 @@ describe("pledge-operations", () => {
             it("should throw an error when a regular function is passed", () => {
                 expect(() => {
                     new PledgeCapability(function() {});
-                }).to.throw(/resolve function is not callable/);
+                }).to.throw(/resolve is not callable/);
             });
     
             it("should throw an error when a regular function is passed without a reject parameter", () => {
@@ -71,7 +71,7 @@ describe("pledge-operations", () => {
     
                 expect(() => {
                     new PledgeCapability(FakePledge);
-                }).to.throw(/reject function is not callable/);
+                }).to.throw(/reject is not callable/);
             });
         });
 

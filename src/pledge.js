@@ -9,7 +9,7 @@
 
 import { PledgeSymbol } from "./pledge-symbol.js";
 import { PledgeReactionJob, hostEnqueuePledgeJob } from "./pledge-jobs.js";
-import { isObject, isCallable, call } from "./utilities.js";
+import { isObject, isCallable } from "./utilities.js";
 import {
     isPledge,
     createResolvingFunctions,
@@ -120,14 +120,14 @@ export class Pledge {
         } else {
 
             thenFinally = value => {
-                const result = call(onFinally, undefined);
+                const result = onFinally.apply(undefined);
                 const pledge = pledgeResolve(C, result);
                 const valueThunk = () => value;
                 return pledge.then(valueThunk);
             };  
             
             catchFinally = reason => {
-                const result = call(onFinally, undefined);
+                const result = onFinally.apply(undefined);
                 const pledge = pledgeResolve(C, result);
                 const thrower = () => {
                     throw reason;
