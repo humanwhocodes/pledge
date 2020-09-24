@@ -64,23 +64,11 @@ export class PledgeCapability {
 // 25.6.1.2 PromiseReaction Records
 //-----------------------------------------------------------------------------
 
-class PledgeReaction {
+export class PledgeReaction {
     constructor(capability, type, handler) {
         this.capability = capability;
         this.type = type;
         this.handler = handler;
-    }
-}
-
-export class PledgeFulfillReaction extends PledgeReaction {
-    constructor(capability, handler) {
-        super(capability, "fulfill", handler);
-    }
-}
-
-export class PledgeRejectReaction extends PledgeReaction {
-    constructor(capability, handler) {
-        super(capability, "reject", handler);
     }
 }
 

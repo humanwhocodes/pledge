@@ -13,8 +13,7 @@ import { isObject, isCallable } from "./utilities.js";
 import {
     isPledge,
     createResolvingFunctions,
-    PledgeFulfillReaction,
-    PledgeRejectReaction,
+    PledgeReaction,
     PledgeCapability
 } from "./pledge-operations.js";
 
@@ -100,8 +99,8 @@ export class Pledge {
         assertIsPledge(this);
 
         const C = this.constructor[Symbol.species];
-        const capability = new PledgeCapability(C);
-        return performPledgeThen(this, onFulfilled, onRejected, capability);
+        const resultCapability = new PledgeCapability(C);
+        return performPledgeThen(this, onFulfilled, onRejected, resultCapability);
     }
 
     catch(rejectionHandler) {
@@ -157,8 +156,8 @@ function performPledgeThen(pledge, onFulfilled, onRejected, resultCapability) {
         onRejected = undefined;
     }
 
-    const fulfillReaction = new PledgeFulfillReaction(resultCapability, onFulfilled);
-    const rejectReaction = new PledgeRejectReaction(resultCapability, onRejected);
+    const fulfillReaction = new PledgeReaction(resultCapability, "fulfill", onFulfilled);
+    const rejectReaction = new PledgeReaction(resultCapability, "reject", onRejected);
 
     switch (pledge[PledgeSymbol.state]) {
 
