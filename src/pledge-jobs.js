@@ -59,10 +59,9 @@ export class PledgeResolveThenableJob {
 export class PledgeReactionJob {
     constructor(reaction, argument) {
         return () => {
-            const { capability, type, handler } = reaction;
+            const { capability: pledgeCapability, type, handler } = reaction;
             let handlerResult;
 
-            // if there's no handler, just settle the pledge
             if (typeof handler === "undefined") {
 
                 if (type === "fulfill") {
@@ -78,7 +77,7 @@ export class PledgeReactionJob {
                 }
             }
 
-            if (typeof capability === "undefined") {
+            if (typeof pledgeCapability === "undefined") {
                 if (handlerResult instanceof ThrowCompletion) {
                     throw handlerResult.value;
                 }
@@ -88,9 +87,9 @@ export class PledgeReactionJob {
             }
 
             if (handlerResult instanceof ThrowCompletion) {
-                capability.reject(handlerResult.value);
+                pledgeCapability.reject(handlerResult.value);
             } else {
-                capability.resolve(handlerResult.value);
+                pledgeCapability.resolve(handlerResult.value);
             }
 
             // Return NormalCompletion(status)
