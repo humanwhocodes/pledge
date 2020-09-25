@@ -103,8 +103,8 @@ export class Pledge {
         return performPledgeThen(this, onFulfilled, onRejected, resultCapability);
     }
 
-    catch(rejectionHandler) {
-        return this.then(null, rejectionHandler);
+    catch(onRejected) {
+        return this.then(null, onRejected);
     }
 
     finally(onFinally) {

@@ -8,6 +8,7 @@
 //-----------------------------------------------------------------------------
 
 import { createResolvingFunctions } from "./pledge-operations.js";
+import { NormalCompletion, ThrowCompletion } from "./utilities.js";
 
 //-----------------------------------------------------------------------------
 // 8.4.1 HostEnqueuePromiseJob ( job, realm )
@@ -59,22 +60,40 @@ export class PledgeReactionJob {
     constructor(reaction, argument) {
         return () => {
             const { capability, type, handler } = reaction;
+            let handlerResult;
 
             // if there's no handler, just settle the pledge
             if (typeof handler === "undefined") {
+
                 if (type === "fulfill") {
-                    capability.resolve(argument);
+                    handlerResult = new NormalCompletion(argument);
                 } else {
-                    capability.reject(argument);
+                    handlerResult = new ThrowCompletion(argument);
                 }
             } else {
                 try {
-                    const handlerResult = handler(argument);
-                    capability.resolve(handlerResult);
+                    handlerResult = new NormalCompletion(handler(argument));
                 } catch (error) {
-                    capability.reject(error);
+                    handlerResult = new ThrowCompletion(error);
                 }
             }
+
+            if (typeof capability === "undefined") {
+                if (handlerResult instanceof ThrowCompletion) {
+                    throw handlerResult.value;
+                }
+
+                // Return NormalCompletion(empty)
+                return;
+            }
+
+            if (handlerResult instanceof ThrowCompletion) {
+                capability.reject(handlerResult.value);
+            } else {
+                capability.resolve(handlerResult.value);
+            }
+
+            // Return NormalCompletion(status)
         };
     }
 }
