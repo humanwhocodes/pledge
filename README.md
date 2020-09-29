@@ -19,7 +19,7 @@ An implementation of JavaScript promises that matches the [ECMA-262](https://www
 This package was created as part of the, "Creating a JavaScript promise from scratch," blog post series. If you have questions about this package, please be sure to check out the blog posts:
 
 1. [Part 1: Constructor](https://humanwhocodes.com/blog/2020/09/creating-javascript-promise-from-scratch-constructor/)
-2. Part 2: Resolving to a promise (coming September 29, 2020)
+2. [Part 2: Resolving to a promise](https://humanwhocodes.com/blog/2020/09/creating-javascript-promise-from-scratch-resolving-to-a-promise/)
 3. Part 3: then(), catch(), and finally() (coming October 6, 2020)
 4. Part 4: Promise.resolve() and Promise.reject (coming in October 2020)
 
