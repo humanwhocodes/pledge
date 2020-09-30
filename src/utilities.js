@@ -22,14 +22,24 @@ export function isCallable(argument) {
 }
 
 //-----------------------------------------------------------------------------
+// 6.2.3 The Completion Record Specification Type
+//-----------------------------------------------------------------------------
+
+export class Completion {
+    constructor(type, value, target) {
+        this.type = type;
+        this.value = value;
+        this.target = target;
+    }
+}
+
+//-----------------------------------------------------------------------------
 // 6.2.3.2 NormalCompletion
 //-----------------------------------------------------------------------------
 
-export class NormalCompletion {
+export class NormalCompletion extends Completion {
     constructor(argument) {
-        this.type = "normal";
-        this.value = argument;
-        this.target = undefined;
+        super("normal", argument);
     }
 }
 
@@ -37,10 +47,8 @@ export class NormalCompletion {
 // 6.2.3.3 ThrowCompletion
 //-----------------------------------------------------------------------------
 
-export class ThrowCompletion {
+export class ThrowCompletion extends Completion {
     constructor(argument) {
-        this.type = "throw";
-        this.value = argument;
-        this.target = undefined;
+        super("throw", argument);
     }
 }
