@@ -317,4 +317,43 @@ describe("Pledge", () => {
         });
     });
 
+    describe("Pledge.resolve()", () => {
+        it("should create a new instance of Pledge when a non-object is passed", () =>{
+            const pledge = Pledge.resolve(42);
+
+            expect(pledge.constructor).to.equal(Pledge);
+            expect(pledge[PledgeSymbol.state]).to.equal("fulfilled");
+            expect(pledge[PledgeSymbol.result]).to.equal(42);
+        });
+
+        it("should return the same Pledge instance when a Pledge is passed", () =>{
+            const pledge0 = Pledge.resolve(42);
+            const pledge = Pledge.resolve(pledge0);
+
+            expect(pledge).to.equal(pledge0);
+        });
+
+        it("should create a new instance of MyPledge when a non-object is passed", () =>{
+            class MyPledge extends Pledge {}
+            const pledge = MyPledge.resolve(42);
+
+            expect(pledge.constructor).to.equal(MyPledge);
+            expect(pledge[PledgeSymbol.state]).to.equal("fulfilled");
+            expect(pledge[PledgeSymbol.result]).to.equal(42);
+        });
+
+        it("should create a new instance of MyPledge when a Pledge is passed", done =>{
+            class MyPledge extends Pledge {}
+            const pledge = MyPledge.resolve(Pledge.resolve(42));
+
+            expect(pledge.constructor).to.equal(MyPledge);
+
+            // wait for pledge to resolve
+            setTimeout(() => {
+                expect(pledge[PledgeSymbol.state]).to.equal("fulfilled");
+                expect(pledge[PledgeSymbol.result]).to.equal(42);
+                done();
+            }, 0);
+        });
+    });
 });

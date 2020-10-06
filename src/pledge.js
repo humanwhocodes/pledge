@@ -123,7 +123,11 @@ export class Pledge {
                 const pledge = pledgeResolve(C, result);
                 const valueThunk = () => value;
                 return pledge.then(valueThunk);
-            };  
+            };
+
+            // not used by included for completeness with spec
+            thenFinally.C = C;
+            thenFinally.onFinally = onFinally;
             
             catchFinally = reason => {
                 const result = onFinally.apply(undefined);
@@ -133,6 +137,11 @@ export class Pledge {
                 };
                 return pledge.then(thrower);
             };
+
+            // not used by included for completeness with spec
+            catchFinally.C = C;
+            catchFinally.onFinally = onFinally;
+
         }
 
         return this.then(thenFinally, catchFinally);
