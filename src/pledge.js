@@ -85,12 +85,12 @@ export class Pledge {
         return pledgeResolve(C, x);
     }
 
-    static reject(reason) {
+    static reject(r) {
         
         const C = this;
 
         const capability = new PledgeCapability(C);
-        capability.reject(reason);
+        capability.reject(r);
         return capability.pledge;
     }
 
