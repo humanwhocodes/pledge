@@ -21,7 +21,7 @@ This package was created as part of the, "Creating a JavaScript promise from scr
 1. [Part 1: Constructor](https://humanwhocodes.com/blog/2020/09/creating-javascript-promise-from-scratch-constructor/)
 2. [Part 2: Resolving to a promise](https://humanwhocodes.com/blog/2020/09/creating-javascript-promise-from-scratch-resolving-to-a-promise/)
 3. [Part 3: then(), catch(), and finally()](https://humanwhocodes.com/blog/2020/10/creating-javascript-promise-from-scratch-then-catch-finally/)
-4. Part 4: Promise.resolve() and Promise.reject (coming in October 2020)
+4. [Part 4: Promise.resolve() and Promise.reject()](https://humanwhocodes.com/blog/2020/10/creating-javascript-promise-from-scratch-promise-resolve-reject/)
 
 Additionally, for every five new [GitHub sponsors](https://github.com/sponsors/nzakas) I receive (donating any amount), I'll release another blog post and associated code:
 
