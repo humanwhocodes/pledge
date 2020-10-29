@@ -12,6 +12,26 @@ import { PledgeSymbol } from "../src/pledge-symbol.js";
 import { expect } from "chai";
 
 //-----------------------------------------------------------------------------
+// Helpers
+//-----------------------------------------------------------------------------
+
+function delayResolvePledge(value, delay) {
+    return new Pledge(resolve => {
+        setTimeout(() => {
+            resolve(value);
+        }, delay);
+    });
+}
+
+function delayRejectPledge(value, delay) {
+    return new Pledge((resolve, reject) => {
+        setTimeout(() => {
+            reject(value);
+        }, delay);
+    });
+}
+
+//-----------------------------------------------------------------------------
 // Tests
 //-----------------------------------------------------------------------------
 
@@ -356,4 +376,77 @@ describe("Pledge", () => {
             }, 0);
         });
     });
+
+    describe("Pledge.race()", () => {
+
+        it("should throw an error when `this` is not a constructor", () => {
+            expect(() => {
+                Pledge.race.call({}, []);
+            }).to.throw(/constructor/);
+        });
+
+        it("should return the first value that was resolved", done => {
+
+            const pledge = Pledge.race([
+                Pledge.resolve(42),
+                Pledge.resolve(43),
+                Pledge.resolve(44)
+            ]);
+
+            pledge.then(value => {
+                expect(value).to.equal(42);
+                done();
+            });
+
+        });
+
+        it("should return the second pledge resolution when it is resolved first", done => {
+
+            const pledge = Pledge.race([
+                delayResolvePledge(42, 500),
+                Pledge.resolve(43),
+                Pledge.resolve(44)
+            ]);
+
+            pledge.then(value => {
+                expect(value).to.equal(43);
+                done();
+            });
+
+        });
+
+        it("should return the first reason that was rejected", done => {
+
+            const pledge = Pledge.race([
+                Pledge.reject(42),
+                Pledge.reject(43),
+                Pledge.reject(44)
+            ]);
+
+            pledge.catch(reason => {
+                expect(reason).to.equal(42);
+                done();
+            });
+
+        });
+
+        it("should return the second pledge reason when it is settled first", done => {
+
+            const pledge = Pledge.race([
+                delayResolvePledge(42, 500),
+                Pledge.reject(43),
+                Pledge.resolve(44)
+            ]);
+
+            pledge.catch(reason => {
+                expect(reason).to.equal(43);
+                done();
+            });
+
+        });
+    });
+
+
+
+
 });

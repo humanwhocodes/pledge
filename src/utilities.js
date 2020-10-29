@@ -12,15 +12,6 @@ export function isObject(argument) {
     return ((type === "object") && (argument !== null)) || type === "function";
 }
 
-
-//-----------------------------------------------------------------------------
-// 7.2.3 IsCallable ( argument )
-//-----------------------------------------------------------------------------
-
-export function isCallable(argument) {
-    return typeof argument === "function";
-}
-
 //-----------------------------------------------------------------------------
 // 6.2.3 The Completion Record Specification Type
 //-----------------------------------------------------------------------------
@@ -51,4 +42,20 @@ export class ThrowCompletion extends Completion {
     constructor(argument) {
         super("throw", argument);
     }
+}
+
+//-----------------------------------------------------------------------------
+// 7.2.3 IsCallable ( argument )
+//-----------------------------------------------------------------------------
+
+export function isCallable(argument) {
+    return typeof argument === "function";
+}
+
+//-----------------------------------------------------------------------------
+// 7.2.4 IsConstructor ( argument )
+//-----------------------------------------------------------------------------
+
+export function isConstructor(argument) {
+    return typeof argument === "function" && typeof argument.prototype !== "undefined";
 }

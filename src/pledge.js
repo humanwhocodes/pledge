@@ -9,7 +9,7 @@
 
 import { PledgeSymbol } from "./pledge-symbol.js";
 import { PledgeReactionJob, hostEnqueuePledgeJob } from "./pledge-jobs.js";
-import { isObject, isCallable } from "./utilities.js";
+import { isObject, isCallable, isConstructor } from "./utilities.js";
 import {
     isPledge,
     createResolvingFunctions,
@@ -30,6 +30,18 @@ function assertIsObject(value) {
 function assertIsPledge(pledge) {
     if (!isPledge(pledge)) {
         throw new TypeError("Value must be an instance of Pledge.");
+    }
+}
+
+function assertIsCallable(value) {
+    if (!isCallable(value)) {
+        throw new TypeError("Value must be callable.");
+    }
+}
+
+function assertIsConstructor(value) {
+    if (!isConstructor(value)) {
+        throw new TypeError("Value must be a constructor.");
     }
 }
 
@@ -72,6 +84,23 @@ export class Pledge {
 
     static get [Symbol.species]() {
         return this;
+    }
+
+    static race(iterable) {
+
+        const C = this;
+        const pledgeCapability = new PledgeCapability(C);
+
+        try {
+            const pledgeResolve = getPledgeResolve(C);
+            const iteratorRecord = iterable[Symbol.iterator]();
+            const result = performPledgeRace(iteratorRecord, C, pledgeCapability, pledgeResolve);
+            return result;
+        } catch (error) {
+            pledgeCapability.reject(error);
+            return pledgeCapability.pledge;
+        }
+
     }
 
     static resolve(x) {
@@ -220,4 +249,38 @@ function pledgeResolve(C, x) {
     const pledgeCapability = new PledgeCapability(C);
     pledgeCapability.resolve(x);
     return pledgeCapability.pledge;
+}
+
+//-----------------------------------------------------------------------------
+// 26.6.4.1.1 GetPromiseResolve ( promiseConstructor )
+//-----------------------------------------------------------------------------
+
+function getPledgeResolve(pledgeConstructor) {
+
+    assertIsConstructor(pledgeConstructor);
+    const promiseResolve = pledgeConstructor.resolve;
+
+    if (!isCallable(promiseResolve)) {
+        throw new TypeError("resolve is not callable.");
+    }
+
+    return pledgeResolve;
+}
+
+//-----------------------------------------------------------------------------
+// 26.6.4.5.1 PerformPromiseRace ( iteratorRecord, constructor,
+//      resultCapability, promiseResolve )
+//----------------------------------------------------------------------------- 
+
+function performPledgeRace(iteratorRecord, constructor, resultCapability, pledgeResolve) {
+
+    assertIsConstructor(constructor);
+    assertIsCallable(pledgeResolve);
+
+    for (const nextValue of iteratorRecord) {
+        const nextPledge = pledgeResolve(constructor, nextValue);
+        nextPledge.then(resultCapability.resolve, resultCapability.reject);
+    }
+
+    return resultCapability.pledge;
 }
