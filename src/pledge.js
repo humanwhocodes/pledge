@@ -9,7 +9,7 @@
 
 import { PledgeSymbol } from "./pledge-symbol.js";
 import { PledgeReactionJob, hostEnqueuePledgeJob } from "./pledge-jobs.js";
-import { isObject, isCallable, isConstructor } from "./utilities.js";
+import { isObject, isCallable, isConstructor, PledgeAggregateError } from "./utilities.js";
 import {
     isPledge,
     createResolvingFunctions,
@@ -84,6 +84,22 @@ export class Pledge {
 
     static get [Symbol.species]() {
         return this;
+    }
+
+    static any(iterable) {
+
+        const C = this;
+        const pledgeCapability = new PledgeCapability(C);
+
+        try {
+            const pledgeResolve = getPledgeResolve(C);
+            const iteratorRecord = iterable[Symbol.iterator]();
+            const result = performPledgeAny(iteratorRecord, C, pledgeCapability, pledgeResolve);
+            return result;
+        } catch (error) {
+            pledgeCapability.reject(error);
+            return error;
+        }
     }
 
     static race(iterable) {
@@ -265,6 +281,85 @@ function getPledgeResolve(pledgeConstructor) {
     }
 
     return pledgeResolve;
+}
+
+//-----------------------------------------------------------------------------
+// 26.6.4.3.1 PerformPromiseAny ( iteratorRecord, constructor, 
+//      resultCapability, promiseResolve )
+//-----------------------------------------------------------------------------
+
+function performPledgeAny(iteratorRecord, constructor, resultCapability, pledgeResolve) {
+
+    assertIsConstructor(constructor);
+    assertIsCallable(pledgeResolve);
+
+    const errors = [];
+    const remainingElementsCount = { value: 1 };
+    let index = 0;
+
+    for (const nextValue of iteratorRecord) {
+
+        errors.push(undefined);
+        
+        const nextPledge = pledgeResolve(constructor, nextValue);
+        const rejectElement = createPledgeAnyRejectElement(index, errors, resultCapability, remainingElementsCount);
+        
+        remainingElementsCount.value = remainingElementsCount.value + 1;
+        nextPledge.then(resultCapability.resolve, rejectElement);
+        index = index + 1;
+    }
+
+    remainingElementsCount.value = remainingElementsCount.value - 1;
+    if (remainingElementsCount.value === 0) {
+        const error = new PledgeAggregateError();
+        Object.defineProperty(error, "errors", {
+            configurable: true,
+            enumerable: false,
+            writable: true,
+            value: errors
+        });
+
+        resultCapability.reject(error);
+    }
+
+    return resultCapability.pledge;
+}
+
+//-----------------------------------------------------------------------------
+// 26.6.4.3.2 Promise.any Reject Element Functions
+//-----------------------------------------------------------------------------
+
+// Note: this function doesn't exist in the spec, I've added it for clarity
+
+function createPledgeAnyRejectElement(index, errors, pledgeCapability, remainingElementsCount) {
+
+    const alreadyCalled = { value: false };
+
+    return x => {
+
+        if (alreadyCalled.value) {
+            return;
+        }
+
+        alreadyCalled.value = true;
+
+        errors[index] = x;
+        remainingElementsCount.value = remainingElementsCount.value - 1;
+
+        if (remainingElementsCount.value === 0) {
+            const error = new PledgeAggregateError();
+            Object.defineProperty(error, "errors", {
+                configurable: true,
+                enumerable: false,
+                writable: true,
+                value: errors
+            });
+
+            return pledgeCapability.reject(error);
+
+        }
+
+    };
 }
 
 //-----------------------------------------------------------------------------

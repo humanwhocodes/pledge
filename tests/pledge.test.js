@@ -446,6 +446,75 @@ describe("Pledge", () => {
         });
     });
 
+    describe("Pledge.any()", () => {
+
+        it("should throw an error when `this` is not a constructor", () => {
+            expect(() => {
+                Pledge.any.call({}, []);
+            }).to.throw(/constructor/);
+        });
+
+        it("should return the first value that was resolved", done => {
+
+            const pledge = Pledge.any([
+                Pledge.resolve(42),
+                Pledge.resolve(43),
+                Pledge.resolve(44)
+            ]);
+
+            pledge.then(value => {
+                expect(value).to.equal(42);
+                done();
+            });
+
+        });
+
+        it("should return the second pledge resolution when it is resolved first", done => {
+
+            const pledge = Pledge.any([
+                Pledge.reject(42),
+                Pledge.resolve(43),
+                Pledge.resolve(44)
+            ]);
+
+            pledge.then(value => {
+                expect(value).to.equal(43);
+                done();
+            });
+
+        });
+
+        it("should return an aggregate error when all pledges are rejected", done => {
+
+            const pledge = Pledge.any([
+                Pledge.reject(42),
+                Pledge.reject(43),
+                Pledge.reject(44)
+            ]);
+
+            pledge.catch(reason => {
+                expect(reason.errors).to.deep.equal([42, 43, 44]);
+                done();
+            });
+
+        });
+
+        it("should return the third pledge value when it is resolved first", done => {
+
+            const pledge = Pledge.any([
+                delayResolvePledge(42, 500),
+                Pledge.reject(43),
+                Pledge.resolve(44)
+            ]);
+
+            pledge.then(value => {
+                expect(value).to.equal(44);
+                done();
+            });
+
+        });
+    });
+
 
 
 

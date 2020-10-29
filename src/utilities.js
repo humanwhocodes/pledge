@@ -59,3 +59,36 @@ export function isCallable(argument) {
 export function isConstructor(argument) {
     return typeof argument === "function" && typeof argument.prototype !== "undefined";
 }
+
+
+//-----------------------------------------------------------------------------
+// 19.5.7 AggregateError Objects
+//-----------------------------------------------------------------------------
+
+export function PledgeAggregateError(errors=[], message) {
+
+    const O = new.target === undefined ? new PledgeAggregateError() : this;
+
+    if (typeof message !== "undefined") {
+        const msg = String(message);
+
+        Object.defineProperty(O, "message", {
+            value: msg,
+            writable: true,
+            enumerable: false,
+            configurable: true
+        });
+    }
+
+    // errors can be an iterable
+    const errorsList = [...errors];
+
+    Object.defineProperty(O, "errors", {
+        configurable: true,
+        enumerable: false,
+        writable: true,
+        value: errorsList
+    });
+
+    return O;
+}
