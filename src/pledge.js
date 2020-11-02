@@ -127,6 +127,23 @@ export class Pledge {
 
     }
 
+    static all(iterable) {
+
+        const C = this;
+        const pledgeCapability = new PledgeCapability(C);
+
+        try {
+            const pledgeResolve = getPledgeResolve(C);
+            const iteratorRecord = getIterator(iterable);
+            const result = performPledgeAll(iteratorRecord, C, pledgeCapability, pledgeResolve);
+            return result;
+        } catch (error) {
+            pledgeCapability.reject(error);
+            return pledgeCapability.pledge;
+        }
+
+    }
+
     static resolve(x) {
 
         const C = this;
@@ -290,6 +307,92 @@ function getPledgeResolve(pledgeConstructor) {
 
     return pledgeResolve;
 }
+
+//-----------------------------------------------------------------------------
+// 26.6.4.1.2 PerformPromiseAll ( iteratorRecord, constructor, 
+//      resultCapability, promiseResolve )
+//-----------------------------------------------------------------------------
+
+function performPledgeAll(iteratorRecord, constructor, resultCapability, pledgeResolve) {
+
+
+    assertIsConstructor(constructor);
+    assertIsCallable(pledgeResolve);
+
+    const values = [];
+    const remainingElementsCount = { value: 1 };
+    let index = 0;
+
+    while (true) {
+        let next;
+
+        try {
+            next = iteratorStep(iteratorRecord);
+        } catch (error) {
+            iteratorRecord.done = true;
+            resultCapability.reject(error);
+            return resultCapability.pledge;
+        }
+
+        if (next === false) {
+            remainingElementsCount.value = remainingElementsCount.value - 1;
+            if (remainingElementsCount.value === 0) {
+                resultCapability.resolve(values);
+            }
+
+            return resultCapability.pledge;
+        }
+
+        let nextValue;
+
+        try {
+            nextValue = iteratorValue(next);
+        } catch (error) {
+            iteratorRecord.done = true;
+            resultCapability.reject(error);
+            return resultCapability.pledge;
+        }
+
+        values.push(undefined);
+        const nextPledge = pledgeResolve.call(constructor, nextValue);
+        const resolveElement = createPledgeAllResolveElement(index, values, resultCapability, remainingElementsCount);
+
+        remainingElementsCount.value = remainingElementsCount.value + 1;
+        nextPledge.then(resolveElement, resultCapability.reject);
+        index = index + 1;
+    }
+
+}
+
+//-----------------------------------------------------------------------------
+// 26.6.4.1.3 Promise.all Resolve Element Functions
+//-----------------------------------------------------------------------------
+
+// Note: this function doesn't exist in the spec, I've added it for clarity
+
+function createPledgeAllResolveElement(index, values, pledgeCapability, remainingElementsCount) {
+
+    const alreadyCalled = { value: false };
+
+    return x => {
+
+        if (alreadyCalled.value) {
+            return;
+        }
+
+        alreadyCalled.value = true;
+
+        values[index] = x;
+        remainingElementsCount.value = remainingElementsCount.value - 1;
+
+        if (remainingElementsCount.value === 0) {
+            return pledgeCapability.resolve(values);
+        }
+
+    };
+}
+
+
 
 //-----------------------------------------------------------------------------
 // 26.6.4.3.1 PerformPromiseAny ( iteratorRecord, constructor, 

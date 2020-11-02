@@ -633,6 +633,135 @@ describe("Pledge", () => {
         });
     });
 
+    describe("Pledge.all()", () => {
+
+        it("should throw an error when `this` is not a constructor", () => {
+            expect(() => {
+                Pledge.all.call({}, []);
+            }).to.throw(/constructor/);
+        });
+
+        it("should reject a pledge when retrieving the iterator throws an error", done => {
+
+            const iterable = {
+                [Symbol.iterator]() {
+                    throw new Error("Uh oh");
+                }
+            };
+
+            const pledge = Pledge.all(iterable);
+            pledge.catch(error => {
+                expect(error.message).to.equal("Uh oh");
+                done();
+            });
+        });
+
+        it("should reject a pledge when iterator.next() throws an error", done => {
+
+            const iterable = {
+                [Symbol.iterator]() {
+                    return {
+                        next() {
+                            throw new Error("Oops");
+                        }
+                    };
+                }
+            };
+
+            const pledge = Pledge.all(iterable);
+            pledge.catch(error => {
+                expect(error.message).to.equal("Oops");
+                done();
+            });
+        });
+
+        it("should reject a pledge when iterator.next().value throws an error", done => {
+
+            const iterable = {
+                [Symbol.iterator]() {
+                    return {
+                        next() {
+                            return {
+                                done: false,
+                                get value() {
+                                    throw new Error("Sorry");
+                                }
+                            };
+                        }
+                    };
+                }
+            };
+
+            const pledge = Pledge.all(iterable);
+            pledge.catch(error => {
+                expect(error.message).to.equal("Sorry");
+                done();
+            });
+        });
+
+
+
+        it("should return the first value that was rejected", done => {
+
+            const pledge = Pledge.all([
+                Pledge.reject(42),
+                Pledge.reject(43),
+                Pledge.reject(44)
+            ]);
+
+            pledge.catch(reason => {
+                expect(reason).to.equal(42);
+                done();
+            });
+
+        });
+
+        it("should return the second pledge rejection when it is resolved first", done => {
+
+            const pledge = Pledge.all([
+                Pledge.resolve(42),
+                Pledge.reject(43),
+                Pledge.resolve(44)
+            ]);
+
+            pledge.catch(reason => {
+                expect(reason).to.equal(43);
+                done();
+            });
+
+        });
+
+        it("should return an array when all pledges are fulfilled", done => {
+
+            const pledge = Pledge.all([
+                Pledge.resolve(42),
+                Pledge.resolve(43),
+                Pledge.resolve(44)
+            ]);
+
+            pledge.then(results => {
+                expect(results).to.deep.equal([42, 43, 44]);
+                done();
+            });
+
+        });
+
+        it("should return the third pledge rejection when it is rejected first", done => {
+
+            const pledge = Pledge.all([
+                delayRejectPledge(42, 500),
+                Pledge.resolve(43),
+                Pledge.reject(44)
+            ]);
+
+            pledge.catch(reason => {
+                expect(reason).to.equal(44);
+                done();
+            });
+
+        });
+    });
+
 
 
 
