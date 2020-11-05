@@ -9,7 +9,15 @@
 
 import { PledgeSymbol } from "./pledge-symbol.js";
 import { PledgeReactionJob, hostEnqueuePledgeJob } from "./pledge-jobs.js";
-import { isObject, isCallable, isConstructor, PledgeAggregateError } from "./utilities.js";
+import {
+    isObject,
+    isCallable,
+    isConstructor,
+    PledgeAggregateError,
+    iteratorStep,
+    iteratorValue,
+    getIterator
+} from "./utilities.js";
 import {
     isPledge,
     createResolvingFunctions,
@@ -93,12 +101,12 @@ export class Pledge {
 
         try {
             const pledgeResolve = getPledgeResolve(C);
-            const iteratorRecord = iterable[Symbol.iterator]();
+            const iteratorRecord = getIterator(iterable);
             const result = performPledgeAny(iteratorRecord, C, pledgeCapability, pledgeResolve);
             return result;
         } catch (error) {
             pledgeCapability.reject(error);
-            return error;
+            return pledgeCapability.pledge;
         }
     }
 
@@ -109,7 +117,7 @@ export class Pledge {
 
         try {
             const pledgeResolve = getPledgeResolve(C);
-            const iteratorRecord = iterable[Symbol.iterator]();
+            const iteratorRecord = getIterator(iterable);
             const result = performPledgeRace(iteratorRecord, C, pledgeCapability, pledgeResolve);
             return result;
         } catch (error) {
@@ -274,9 +282,9 @@ function pledgeResolve(C, x) {
 function getPledgeResolve(pledgeConstructor) {
 
     assertIsConstructor(pledgeConstructor);
-    const promiseResolve = pledgeConstructor.resolve;
+    const pledgeResolve = pledgeConstructor.resolve;
 
-    if (!isCallable(promiseResolve)) {
+    if (!isCallable(pledgeResolve)) {
         throw new TypeError("resolve is not callable.");
     }
 
@@ -297,11 +305,46 @@ function performPledgeAny(iteratorRecord, constructor, resultCapability, pledgeR
     const remainingElementsCount = { value: 1 };
     let index = 0;
 
-    for (const nextValue of iteratorRecord) {
+    while (true) {
+        let next;
+        
+        try {
+            next = iteratorStep(iteratorRecord);
+        } catch (error) {
+            iteratorRecord.done = true;
+            resultCapability.reject(error);
+            return resultCapability.pledge;
+        }
+
+        if (next === false) {
+            remainingElementsCount.value = remainingElementsCount.value - 1;
+            if (remainingElementsCount.value === 0) {
+                const error = new PledgeAggregateError();
+                Object.defineProperty(error, "errors", {
+                    configurable: true,
+                    enumerable: false,
+                    writable: true,
+                    value: errors
+                });
+        
+                resultCapability.reject(error);
+            }
+        
+            return resultCapability.pledge;
+        }
+        
+        let nextValue;
+
+        try {
+            nextValue = iteratorValue(next);
+        } catch(error) {
+            iteratorRecord.done = true;
+            resultCapability.reject(error);
+            return resultCapability.pledge;
+        }
 
         errors.push(undefined);
-        
-        const nextPledge = pledgeResolve(constructor, nextValue);
+        const nextPledge = pledgeResolve.call(constructor, nextValue);
         const rejectElement = createPledgeAnyRejectElement(index, errors, resultCapability, remainingElementsCount);
         
         remainingElementsCount.value = remainingElementsCount.value + 1;
@@ -309,20 +352,6 @@ function performPledgeAny(iteratorRecord, constructor, resultCapability, pledgeR
         index = index + 1;
     }
 
-    remainingElementsCount.value = remainingElementsCount.value - 1;
-    if (remainingElementsCount.value === 0) {
-        const error = new PledgeAggregateError();
-        Object.defineProperty(error, "errors", {
-            configurable: true,
-            enumerable: false,
-            writable: true,
-            value: errors
-        });
-
-        resultCapability.reject(error);
-    }
-
-    return resultCapability.pledge;
 }
 
 //-----------------------------------------------------------------------------
@@ -372,10 +401,35 @@ function performPledgeRace(iteratorRecord, constructor, resultCapability, pledge
     assertIsConstructor(constructor);
     assertIsCallable(pledgeResolve);
 
-    for (const nextValue of iteratorRecord) {
-        const nextPledge = pledgeResolve(constructor, nextValue);
+    while (true) {
+
+        let next;
+        
+        try {
+            next = iteratorStep(iteratorRecord);
+        } catch (error) {
+            iteratorRecord.done = true;
+            resultCapability.reject(error);
+            return resultCapability.pledge;
+        }
+
+        if (next === false) {
+            iteratorRecord.done = true;
+            return resultCapability.pledge;
+        }
+
+        let nextValue;
+
+        try {
+            nextValue = iteratorValue(next);
+        } catch (error) {
+            iteratorRecord.done = true;
+            resultCapability.reject(error);
+            return resultCapability.pledge;
+        }
+
+        const nextPledge = pledgeResolve.call(constructor, nextValue);
         nextPledge.then(resultCapability.resolve, resultCapability.reject);
     }
 
-    return resultCapability.pledge;
 }

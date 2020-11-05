@@ -385,6 +385,66 @@ describe("Pledge", () => {
             }).to.throw(/constructor/);
         });
 
+        it("should reject a pledge when retrieving the iterator throws an error", done => {
+
+            const iterable = {
+                [Symbol.iterator]() {
+                    throw new Error("Uh oh");
+                }
+            };
+
+            const pledge = Pledge.race(iterable);
+            pledge.catch(error => {
+                expect(error.message).to.equal("Uh oh");
+                done();
+            });
+        });
+
+        it("should reject a pledge when iterator.next() throws an error", done => {
+
+            const iterable = {
+                [Symbol.iterator]() {
+                    return {
+                        next() {
+                            throw new Error("Oops");
+                        }
+                    };
+                }
+            };
+
+            const pledge = Pledge.race(iterable);
+            pledge.catch(error => {
+                expect(error.message).to.equal("Oops");
+                done();
+            });
+        });
+
+        it("should reject a pledge when iterator.next().value throws an error", done => {
+
+            const iterable = {
+                [Symbol.iterator]() {
+                    return {
+                        next() {
+                            return {
+                                done: false,
+                                get value() {
+                                    throw new Error("Sorry");
+                                }
+                            };
+                        }
+                    };
+                }
+            };
+
+            const pledge = Pledge.race(iterable);
+            pledge.catch(error => {
+                expect(error.message).to.equal("Sorry");
+                done();
+            });
+        });
+
+
+
         it("should return the first value that was resolved", done => {
 
             const pledge = Pledge.race([
@@ -452,6 +512,64 @@ describe("Pledge", () => {
             expect(() => {
                 Pledge.any.call({}, []);
             }).to.throw(/constructor/);
+        });
+
+        it("should reject a pledge when retrieving the iterator throws an error", done => {
+            
+            const iterable = {
+                [Symbol.iterator]() {
+                    throw new Error("Uh oh");
+                }
+            };
+
+            const pledge = Pledge.any(iterable);
+            pledge.catch(error => {
+                expect(error.message).to.equal("Uh oh");
+                done();
+            });
+        });
+
+        it("should reject a pledge when iterator.next() throws an error", done => {
+            
+            const iterable = {
+                [Symbol.iterator]() {
+                    return {
+                        next() {
+                            throw new Error("Oops");
+                        }
+                    };
+                }
+            };
+
+            const pledge = Pledge.any(iterable);
+            pledge.catch(error => {
+                expect(error.message).to.equal("Oops");
+                done();
+            });
+        });
+
+        it("should reject a pledge when iterator.next().value throws an error", done => {
+            
+            const iterable = {
+                [Symbol.iterator]() {
+                    return {
+                        next() {
+                            return {
+                                done: false,
+                                get value() {
+                                    throw new Error("Sorry");
+                                }
+                            };
+                        }
+                    };
+                }
+            };
+
+            const pledge = Pledge.any(iterable);
+            pledge.catch(error => {
+                expect(error.message).to.equal("Sorry");
+                done();
+            });
         });
 
         it("should return the first value that was resolved", done => {

@@ -60,7 +60,6 @@ export function isConstructor(argument) {
     return typeof argument === "function" && typeof argument.prototype !== "undefined";
 }
 
-
 //-----------------------------------------------------------------------------
 // 19.5.7 AggregateError Objects
 //-----------------------------------------------------------------------------
@@ -91,4 +90,112 @@ export function PledgeAggregateError(errors=[], message) {
     });
 
     return O;
+}
+
+//-----------------------------------------------------------------------------
+// 7.4.1 GetIterator ( obj [ , hint [ , method ] ] )
+//-----------------------------------------------------------------------------
+
+export function getIterator(obj, hint="sync", method) {
+
+    if (hint !== "sync" && hint !== "async") {
+        throw new TypeError("Invalid hint.");
+    }
+
+    if (method === undefined) {
+        
+        if (hint === "async") {
+        
+            method = obj[Symbol.asyncIterator];
+        
+            if (method === undefined) {
+                const syncMethod = obj[Symbol.iterator];
+                const syncIteratorRecord = getIterator(obj, "sync", syncMethod);
+
+                // can't accurately represent CreateAsyncFromSyncIterator()
+                return syncIteratorRecord;
+            }
+        } else {
+            method = obj[Symbol.iterator];
+        }
+    }
+
+    const iterator = method.call(obj);
+
+    if (!isObject(iterator)) {
+        throw new TypeError("Iterator must be an object.");
+    }
+
+    const nextMethod = iterator.next;
+
+    return {
+        iterator,
+        nextMethod,
+        done: false
+    };
+
+}
+
+//-----------------------------------------------------------------------------
+// 7.4.2 IteratorNext ( iteratorRecord [ , value ] )
+//-----------------------------------------------------------------------------
+
+export function iteratorNext(iteratorRecord, value) {
+
+    let result;
+
+    if (value === undefined) {
+        result = iteratorRecord.nextMethod.call(iteratorRecord.iterator);
+    } else {
+        result = iteratorRecord.nextMethod.call(iteratorRecord.iterator, value);
+    }
+
+    if (!isObject(result)) {
+        throw new TypeError("Result must be an object.");
+    }
+
+    return result;
+
+}
+
+//-----------------------------------------------------------------------------
+// 7.4.3 IteratorComplete(iterResult)
+//-----------------------------------------------------------------------------
+
+export function iteratorComplete(iterResult) {
+
+    if (!isObject(iterResult)) {
+        throw new TypeError("Argument must be an object.");
+    }
+
+    return Boolean(iterResult.done);
+}
+
+//-----------------------------------------------------------------------------
+// 7.4.4 IteratorValue(iterResult)
+//-----------------------------------------------------------------------------
+
+export function iteratorValue(iterResult) {
+
+    if (!isObject(iterResult)) {
+        throw new TypeError("Argument must be an object.");
+    }
+
+    return iterResult.value;
+}
+
+//-----------------------------------------------------------------------------
+// 7.4.5 IteratorStep ( iteratorRecord )
+//-----------------------------------------------------------------------------
+
+export function iteratorStep(iteratorRecord) {
+
+    const result = iteratorNext(iteratorRecord);
+    const done = iteratorComplete(result);
+    
+    if (done) {
+        return false;
+    }
+
+    return result;
 }
