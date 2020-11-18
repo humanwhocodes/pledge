@@ -443,8 +443,6 @@ describe("Pledge", () => {
             });
         });
 
-
-
         it("should return the first value that was resolved", done => {
 
             const pledge = Pledge.race([

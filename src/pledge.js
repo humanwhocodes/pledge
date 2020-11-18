@@ -16,7 +16,9 @@ import {
     PledgeAggregateError,
     iteratorStep,
     iteratorValue,
-    getIterator
+    getIterator,
+    iteratorClose,
+    ThrowCompletion
 } from "./utilities.js";
 import {
     isPledge,
@@ -98,14 +100,22 @@ export class Pledge {
 
         const C = this;
         const pledgeCapability = new PledgeCapability(C);
+        let iteratorRecord;
 
         try {
             const pledgeResolve = getPledgeResolve(C);
-            const iteratorRecord = getIterator(iterable);
+            iteratorRecord = getIterator(iterable);
             const result = performPledgeAny(iteratorRecord, C, pledgeCapability, pledgeResolve);
             return result;
         } catch (error) {
-            pledgeCapability.reject(error);
+
+            let result = new ThrowCompletion(error);
+
+            if (iteratorRecord && iteratorRecord.done === false) {
+                result = iteratorClose(iteratorRecord, result);
+            }
+
+            pledgeCapability.reject(result.value);
             return pledgeCapability.pledge;
         }
     }
@@ -114,14 +124,22 @@ export class Pledge {
 
         const C = this;
         const pledgeCapability = new PledgeCapability(C);
+        let iteratorRecord;
 
         try {
             const pledgeResolve = getPledgeResolve(C);
-            const iteratorRecord = getIterator(iterable);
+            iteratorRecord = getIterator(iterable);
             const result = performPledgeRace(iteratorRecord, C, pledgeCapability, pledgeResolve);
             return result;
         } catch (error) {
-            pledgeCapability.reject(error);
+
+            let result = new ThrowCompletion(error);
+
+            if (iteratorRecord && iteratorRecord.done === false) {
+                result = iteratorClose(iteratorRecord, result);
+            }
+
+            pledgeCapability.reject(result.value);
             return pledgeCapability.pledge;
         }
 
@@ -131,15 +149,49 @@ export class Pledge {
 
         const C = this;
         const pledgeCapability = new PledgeCapability(C);
+        let iteratorRecord;
 
         try {
             const pledgeResolve = getPledgeResolve(C);
-            const iteratorRecord = getIterator(iterable);
+            iteratorRecord = getIterator(iterable);
             const result = performPledgeAll(iteratorRecord, C, pledgeCapability, pledgeResolve);
             return result;
         } catch (error) {
-            pledgeCapability.reject(error);
+
+            let result = new ThrowCompletion(error);
+
+            if (iteratorRecord && iteratorRecord.done === false) {
+                result = iteratorClose(iteratorRecord, result);
+            }
+
+            pledgeCapability.reject(result.value);
             return pledgeCapability.pledge;
+        }
+
+    }
+
+    static allSettled(iterable) {
+
+        const C = this;
+        const pledgeCapability = new PledgeCapability(C);
+        let iteratorRecord;
+
+        try {
+            const pledgeResolve = getPledgeResolve(C);
+            iteratorRecord = getIterator(iterable);
+            // const result = performPledgeAllSettled(iteratorRecord, C, pledgeCapability, pledgeResolve);
+            // return result;
+        } catch (error) {
+
+            let result = new ThrowCompletion(error);
+
+            if (iteratorRecord && iteratorRecord.done === false) {
+                result = iteratorClose(iteratorRecord, result);
+            }
+
+            pledgeCapability.reject(result.value);
+            return pledgeCapability.pledge;
+
         }
 
     }
@@ -314,7 +366,6 @@ function getPledgeResolve(pledgeConstructor) {
 //-----------------------------------------------------------------------------
 
 function performPledgeAll(iteratorRecord, constructor, resultCapability, pledgeResolve) {
-
 
     assertIsConstructor(constructor);
     assertIsCallable(pledgeResolve);
