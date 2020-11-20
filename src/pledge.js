@@ -508,6 +508,61 @@ function performPledgeAny(iteratorRecord, constructor, resultCapability, pledgeR
 
 }
 
+/*
+ * This function is just FYI. The above function just looks complicated because of the way
+ * iterators are used. The algorithm is actually fairly straightforward if you work with
+ * the iterator in a normal fashion. Here's what it would look like if you were writing it
+ * like a human being instead of copying the spec.
+ */
+function performPledgeAnySimple(iteratorRecord, constructor, resultCapability, pledgeResolve) {
+
+    assertIsConstructor(constructor);
+    assertIsCallable(pledgeResolve);
+
+    // You could actually just pass the iterator instead of `iteratatorRecord`
+    const iterator = iteratorRecord.iterator;
+
+    const errors = [];
+    const remainingElementsCount = { value: 1 };
+    let index = 0;
+
+    try {
+
+        // loop over every value in the iterator
+        for (const nextValue of iterator) {
+            errors.push(undefined);
+
+            const nextPledge = pledgeResolve.call(constructor, nextValue);
+            const rejectElement = createPledgeAnyRejectElement(index, errors, resultCapability, remainingElementsCount);
+
+            nextPledge.then(resultCapability.resolve, rejectElement);
+
+            remainingElementsCount.value = remainingElementsCount.value + 1;
+            index = index + 1;
+        }
+
+        remainingElementsCount.value = remainingElementsCount.value - 1;
+        if (remainingElementsCount.value === 0) {
+            const error = new PledgeAggregateError();
+            Object.defineProperty(error, "errors", {
+                configurable: true,
+                enumerable: false,
+                writable: true,
+                value: errors
+            });
+
+            resultCapability.reject(error);
+        }
+
+    } catch (error) {
+        resultCapability.reject(error);
+    }
+
+    iteratorRecord.done = true;
+    return resultCapability.pledge;
+}
+
+
 //-----------------------------------------------------------------------------
 // 26.6.4.3.2 Promise.any Reject Element Functions
 //-----------------------------------------------------------------------------
@@ -586,4 +641,34 @@ function performPledgeRace(iteratorRecord, constructor, resultCapability, pledge
         nextPledge.then(resultCapability.resolve, resultCapability.reject);
     }
 
+}
+
+/*
+ * This function is just FYI. The above function just looks complicated because of the way
+ * iterators are used. The algorithm is actually fairly straightforward if you work with
+ * the iterator in a normal fashion. Here's what it would look like if you were writing it
+ * like a human being instead of copying the spec.
+ */
+function performPledgeRaceSimple(iteratorRecord, constructor, resultCapability, pledgeResolve) {
+
+    assertIsConstructor(constructor);
+    assertIsCallable(pledgeResolve);
+
+    // You could actually just pass the iterator instead of `iteratatorRecord`
+    const iterator = iteratorRecord.iterator;
+
+    try {
+
+        // loop over every value in the iterator
+        for (const nextValue of iterator) {
+            const nextPledge = pledgeResolve.call(constructor, nextValue);
+            nextPledge.then(resultCapability.resolve, resultCapability.reject);
+        }
+
+    } catch (error) {
+        resultCapability.reject(error);
+    }
+
+    iteratorRecord.done = true;
+    return resultCapability.pledge;
 }
