@@ -761,6 +761,189 @@ describe("Pledge", () => {
     });
 
 
+    describe("Pledge.allSettled()", () => {
+
+        it("should throw an error when `this` is not a constructor", () => {
+            expect(() => {
+                Pledge.allSettled.call({}, []);
+            }).to.throw(/constructor/);
+        });
+
+        it("should reject a pledge when retrieving the iterator throws an error", done => {
+
+            const iterable = {
+                [Symbol.iterator]() {
+                    throw new Error("Uh oh");
+                }
+            };
+
+            const pledge = Pledge.allSettled(iterable);
+            pledge.catch(error => {
+                expect(error.message).to.equal("Uh oh");
+                done();
+            });
+        });
+
+        it("should reject a pledge when iterator.next() throws an error", done => {
+
+            const iterable = {
+                [Symbol.iterator]() {
+                    return {
+                        next() {
+                            throw new Error("Oops");
+                        }
+                    };
+                }
+            };
+
+            const pledge = Pledge.allSettled(iterable);
+            pledge.catch(error => {
+                expect(error.message).to.equal("Oops");
+                done();
+            });
+        });
+
+        it("should reject a pledge when iterator.next().value throws an error", done => {
+
+            const iterable = {
+                [Symbol.iterator]() {
+                    return {
+                        next() {
+                            return {
+                                done: false,
+                                get value() {
+                                    throw new Error("Sorry");
+                                }
+                            };
+                        }
+                    };
+                }
+            };
+
+            const pledge = Pledge.allSettled(iterable);
+            pledge.catch(error => {
+                expect(error.message).to.equal("Sorry");
+                done();
+            });
+        });
+
+
+
+        it("should return all rejected values", done => {
+
+            const pledge = Pledge.allSettled([
+                Pledge.reject(42),
+                Pledge.reject(43),
+                Pledge.reject(44)
+            ]);
+
+            pledge.then(reason => {
+                expect(reason).to.deep.equal([
+                    {
+                        status: "rejected",
+                        value: 42
+                    },
+                    {
+                        status: "rejected",
+                        value: 43
+                    },
+                    {
+                        status: "rejected",
+                        value: 44
+                    }
+                ]);
+                done();
+            });
+
+        });
+
+        it("should return both fulfilled and rejected values", done => {
+
+            const pledge = Pledge.allSettled([
+                Pledge.resolve(42),
+                Pledge.reject(43),
+                Pledge.resolve(44)
+            ]);
+
+            pledge.then(value => {
+                expect(value).to.deep.equal([
+                    {
+                        status: "fulfilled",
+                        value: 42
+                    },
+                    {
+                        status: "rejected",
+                        value: 43
+                    },
+                    {
+                        status: "fulfilled",
+                        value: 44
+                    }
+                ]);
+                done();
+            });
+
+        });
+
+        it("should return an array when all pledges are fulfilled", done => {
+
+            const pledge = Pledge.allSettled([
+                Pledge.resolve(42),
+                Pledge.resolve(43),
+                Pledge.resolve(44)
+            ]);
+
+            pledge.then(value => {
+                expect(value).to.deep.equal([
+                    {
+                        status: "fulfilled",
+                        value: 42
+                    },
+                    {
+                        status: "fulfilled",
+                        value: 43
+                    },
+                    {
+                        status: "fulfilled",
+                        value: 44
+                    }
+                ]);
+                done();
+            });
+
+        });
+
+        it("should return all pledges even when delayed", done => {
+
+            const pledge = Pledge.allSettled([
+                delayRejectPledge(42, 500),
+                Pledge.resolve(43),
+                Pledge.reject(44)
+            ]);
+
+            pledge.then(value => {
+                expect(value).to.deep.equal([
+                    {
+                        status: "rejected",
+                        value: 42
+                    },
+                    {
+                        status: "fulfilled",
+                        value: 43
+                    },
+                    {
+                        status: "rejected",
+                        value: 44
+                    }
+                ]);
+                done();
+            });
+
+        });
+    });
+
+
+
 
 
 });

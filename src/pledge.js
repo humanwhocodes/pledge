@@ -179,8 +179,8 @@ export class Pledge {
         try {
             const pledgeResolve = getPledgeResolve(C);
             iteratorRecord = getIterator(iterable);
-            // const result = performPledgeAllSettled(iteratorRecord, C, pledgeCapability, pledgeResolve);
-            // return result;
+            const result = performPledgeAllSettled(iteratorRecord, C, pledgeCapability, pledgeResolve);
+            return result;
         } catch (error) {
 
             let result = new ThrowCompletion(error);
@@ -671,4 +671,124 @@ function performPledgeRaceSimple(iteratorRecord, constructor, resultCapability, 
 
     iteratorRecord.done = true;
     return resultCapability.pledge;
+}
+
+//-----------------------------------------------------------------------------
+// 26.6.4.2.1 PerformPromiseAllSettled ( iteratorRecord, constructor,
+//      resultCapability, promiseResolve )
+//-----------------------------------------------------------------------------
+
+function performPledgeAllSettled(iteratorRecord, constructor, resultCapability, pledgeResolve) {
+
+    assertIsConstructor(constructor);
+    assertIsCallable(pledgeResolve);
+
+    const values = [];
+    const remainingElementsCount = { value: 1 };
+    let index = 0;
+
+    while (true) {
+        let next;
+
+        try {
+            next = iteratorStep(iteratorRecord);
+        } catch (error) {
+            iteratorRecord.done = true;
+            resultCapability.reject(error);
+            return resultCapability.pledge;
+        }
+
+        if (next === false) {
+            remainingElementsCount.value = remainingElementsCount.value - 1;
+            if (remainingElementsCount.value === 0) {
+                resultCapability.resolve(values);
+            }
+
+            return resultCapability.pledge;
+        }
+
+        let nextValue;
+
+        try {
+            nextValue = iteratorValue(next);
+        } catch (error) {
+            iteratorRecord.done = true;
+            resultCapability.reject(error);
+            return resultCapability.pledge;
+        }
+
+        values.push(undefined);
+        const nextPledge = pledgeResolve.call(constructor, nextValue);
+        const resolveElement = createPledgeAllSettledResolveElement(index, values, resultCapability, remainingElementsCount);
+        const rejectElement = createPledgeAllSettledRejectElement(index, values, resultCapability, remainingElementsCount);
+
+        remainingElementsCount.value = remainingElementsCount.value + 1;
+        nextPledge.then(resolveElement, rejectElement);
+        index = index + 1;
+    }
+
+}
+
+//-----------------------------------------------------------------------------
+// 26.6.4.2.2 Promise.allSettled Resolve Element Functions
+//-----------------------------------------------------------------------------
+
+// Note: this function doesn't exist in the spec, I've added it for clarity
+
+function createPledgeAllSettledResolveElement(index, values, pledgeCapability, remainingElementsCount) {
+
+    const alreadyCalled = { value: false };
+
+    return x => {
+
+        if (alreadyCalled.value) {
+            return;
+        }
+
+        alreadyCalled.value = true;
+
+        values[index] = {
+            status: "fulfilled",
+            value: x
+        };
+
+        remainingElementsCount.value = remainingElementsCount.value - 1;
+
+        if (remainingElementsCount.value === 0) {
+            return pledgeCapability.resolve(values);
+        }
+
+    };
+}
+
+//-----------------------------------------------------------------------------
+// 26.6.4.2.3 Promise.allSettled Reject Element Functions
+//-----------------------------------------------------------------------------
+
+// Note: this function doesn't exist in the spec, I've added it for clarity
+
+function createPledgeAllSettledRejectElement(index, values, pledgeCapability, remainingElementsCount) {
+
+    const alreadyCalled = { value: false };
+
+    return x => {
+
+        if (alreadyCalled.value) {
+            return;
+        }
+
+        alreadyCalled.value = true;
+
+        values[index] = {
+            status: "rejected",
+            value: x
+        };
+        
+        remainingElementsCount.value = remainingElementsCount.value - 1;
+
+        if (remainingElementsCount.value === 0) {
+            return pledgeCapability.resolve(values);
+        }
+
+    };
 }
