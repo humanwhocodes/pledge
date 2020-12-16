@@ -23,13 +23,13 @@ This package was created as part of the, "Creating a JavaScript promise from scr
 3. [Part 3: then(), catch(), and finally()](https://humanwhocodes.com/blog/2020/10/creating-javascript-promise-from-scratch-then-catch-finally/)
 4. [Part 4: Promise.resolve() and Promise.reject()](https://humanwhocodes.com/blog/2020/10/creating-javascript-promise-from-scratch-promise-resolve-reject/)
 
-Additionally, for every five new [GitHub sponsors](https://github.com/sponsors/nzakas) I receive (donating any amount), I'll release another blog post and associated code:
+Additionally, thanks to my [GitHub sponsors](https://github.com/sponsors/nzakas) the following posts are now or will soon be available:
 
-5. Part 5: Promise.race() and Promise.any() (when I reach 35 sponsors)
-6. Part 6: Promise.all() and Promise.allSettled() (when I reach 40 sponsors)
-7. Unhandled rejection tracking (when I reach 45 sponsors)
+5. [Part 5: Promise.race() and Promise.any()](https://humanwhocodes.com/blog/2020/11/creating-javascript-promise-from-scratch-promise-race-any/)
+6. [Part 6: Promise.all() and Promise.allSettled()](https://humanwhocodes.com/blog/2020/12/creating-javascript-promise-from-scratch-promise-all-allsettled/)
+7. Unhandled rejection tracking (coming soon)
 
-So if you would like to see parts 5-7, along with the associated changes to this library, please [sponsor me](https://github.com/sponsors/nzakas) on GitHub.
+If you found this series and code helpful, please [sponsor me](https://github.com/sponsors/nzakas) on GitHub.
 
 ## Usage
 
@@ -109,10 +109,6 @@ const rejected = Pledge.reject(new Error("Uh oh!"));
 ### Why make this package?
 
 Promises have a lot of difficult concepts to understand, and sometimes the easiest way to understand difficult concepts is to put them into a familiar paradigm. In this case, creating an implementation of promises in JavaScript gave me a better understanding of how they work, and hopefully, they will help others understand them better, too.
-
-### Why doesn't this include `all()`, `race()`, `allSettled()`, and `any()`?
-
-These are all just different ways to mix and match multiple promises, and my immediate goal was to get a basic understanding of dealing with one promise at a time. If you'd like me to implement these, please consider [donating](https://github.com/sponsors/nzakas).
 
 [npm]: https://npmjs.com/
 [yarn]: https://yarnpkg.com/
