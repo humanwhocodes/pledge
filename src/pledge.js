@@ -24,8 +24,10 @@ import {
     isPledge,
     createResolvingFunctions,
     PledgeReaction,
-    PledgeCapability
+    PledgeCapability,
+    hostPledgeRejectionTracker
 } from "./pledge-operations.js";
+import { RejectionTracker } from "./rejection-tracker.js";
 
 //-----------------------------------------------------------------------------
 // Helpers
@@ -94,6 +96,14 @@ export class Pledge {
 
     static get [Symbol.species]() {
         return this;
+    }
+
+    static onUnhandledRejection(pledge, reason) {
+        // noop
+    }
+
+    static rejectionHandled(pledge, reason) {
+        // noop
     }
 
     static any(iterable) {
@@ -270,6 +280,7 @@ export class Pledge {
     }
 }
 
+Pledge[PledgeSymbol.rejectionTracker] = new RejectionTracker();
 
 //-----------------------------------------------------------------------------
 // 25.6.5.4.1 PerformPromiseThen(promise, onFulfilled, onRejected,
@@ -308,8 +319,11 @@ function performPledgeThen(pledge, onFulfilled, onRejected, resultCapability) {
         case "rejected":
             {
                 const reason = pledge[PledgeSymbol.result];
+                if (pledge[PledgeSymbol.isHandled] === false) {
+                    hostPledgeRejectionTracker(pledge, "handle");
+                }
+
                 const rejectJob = new PledgeReactionJob(rejectReaction, reason);
-                // TODO: if [[isHandled]] if false
                 hostEnqueuePledgeJob(rejectJob);
             }
             break;

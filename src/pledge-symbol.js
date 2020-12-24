@@ -11,5 +11,6 @@ export const PledgeSymbol = Object.freeze({
     result: Symbol("PledgeResult"),
     isHandled: Symbol("PledgeIsHandled"),
     fulfillReactions: Symbol("PledgeFulfillReactions"),
-    rejectReactions: Symbol("PledgeRejectReactions")
+    rejectReactions: Symbol("PledgeRejectReactions"),
+    rejectionTracker: Symbol("PledgeRejectionTracker")
 });
