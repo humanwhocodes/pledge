@@ -10,6 +10,8 @@
 import { Pledge } from "../src/pledge.js";
 import { PledgeSymbol } from "../src/pledge-symbol.js";
 import { expect } from "chai";
+import sinon from "sinon";
+import { RejectionTracker } from "../src/rejection-tracker.js";
 
 //-----------------------------------------------------------------------------
 // Helpers
@@ -943,7 +945,71 @@ describe("Pledge", () => {
     });
 
 
+    describe.only("Rejection Tracking", () => {
 
+        const fakeLogger = { error(){} };
+        let mockLogger;
+
+        beforeEach(() => {
+            mockLogger = sinon.mock(fakeLogger);
+            Pledge[PledgeSymbol.rejectionTracker] = new RejectionTracker(fakeLogger);
+
+        });
+
+        afterEach(() => {
+            mockLogger.restore();
+            Pledge[PledgeSymbol.rejectionTracker] = new RejectionTracker();
+            Pledge.onUnhandledRejection = () => {};
+            Pledge.onRejectionHandled = () => {};
+        });
+
+        it("should log an error when a pledge is rejected without a rejection handler", done => {
+            mockLogger.expects("error").once().withArgs("Pledge rejection was not caught: 43");
+
+            const pledge = new Pledge((resolve, reject) => {
+                reject(43);
+            });
+
+            setTimeout(() => {
+                mockLogger.verify();
+                done();
+            }, 1000);
+        });
+
+        it("should not log an error when a pledge is rejected with a rejection handler", done => {
+            mockLogger.expects("error").never();
+
+            const pledge = new Pledge((resolve, reject) => {
+                reject(43);
+            }).catch(() => {});
+
+            setTimeout(() => {
+                mockLogger.verify();
+                done();
+            }, 1000);
+        });
+
+        it("should call Pledge.onUnhandledRejection when a pledge is rejected without a rejection handler", done => {
+            mockLogger.expects("error").once().withArgs("Pledge rejection was not caught: 43");
+            const pledge = new Pledge((resolve, reject) => {
+                reject(43);
+            });
+            
+            const handler = sinon.spy();
+            
+            Pledge.onUnhandledRejection = sinon.spy();
+
+            setTimeout(() => {
+                mockLogger.verify();
+                expect(handler.calledOnceWith(sinon.match({
+                    pledge,
+                    reason: 43
+                }))).to.be.true;
+                done();
+            }, 1000);
+        });
+
+    });
 
 
 });
