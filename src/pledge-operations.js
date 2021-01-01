@@ -236,8 +236,8 @@ export function rejectPledge(pledge, reason) {
     pledge[PledgeSymbol.state] = "rejected";
 
     // global rejection tracking
-    if (!pledge[PledgeSymbol.isHandled]) {
-        // TODO: perform HostPromiseRejectionTracker(promise, "reject").
+    if (pledge[PledgeSymbol.isHandled] === false) {
+        hostPledgeRejectionTracker(pledge, "reject");
     }
 
     return triggerPledgeReactions(reactions, reason);
@@ -257,7 +257,12 @@ export function triggerPledgeReactions(reactions, argument) {
 }
 
 //-----------------------------------------------------------------------------
-// 25.6.1.9 HostPromiseRejectionTracker(promise, operation)
+// 26.6.1.9 HostPromiseRejectionTracker ( promise, operation )
 //-----------------------------------------------------------------------------
 
-// TODO
+// everything in this function is not defined in the spec
+
+export function hostPledgeRejectionTracker(pledge, operation) {
+    const rejectionTracker = pledge.constructor[PledgeSymbol.rejectionTracker];
+    rejectionTracker.track(pledge, operation);
+}

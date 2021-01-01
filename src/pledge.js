@@ -24,8 +24,10 @@ import {
     isPledge,
     createResolvingFunctions,
     PledgeReaction,
-    PledgeCapability
+    PledgeCapability,
+    hostPledgeRejectionTracker
 } from "./pledge-operations.js";
+import { RejectionTracker } from "./rejection-tracker.js";
 
 //-----------------------------------------------------------------------------
 // Helpers
@@ -95,6 +97,16 @@ export class Pledge {
     static get [Symbol.species]() {
         return this;
     }
+
+    /* eslint-disable no-unused-vars */
+    static onUnhandledRejection(pledge, reason) {
+        // noop
+    }
+    
+    static onRejectionHandled(pledge, reason) {
+        // noop
+    }
+    /* eslint-enable no-unused-vars */
 
     static any(iterable) {
 
@@ -270,6 +282,7 @@ export class Pledge {
     }
 }
 
+Pledge[PledgeSymbol.rejectionTracker] = new RejectionTracker();
 
 //-----------------------------------------------------------------------------
 // 25.6.5.4.1 PerformPromiseThen(promise, onFulfilled, onRejected,
@@ -308,8 +321,11 @@ function performPledgeThen(pledge, onFulfilled, onRejected, resultCapability) {
         case "rejected":
             {
                 const reason = pledge[PledgeSymbol.result];
+                if (pledge[PledgeSymbol.isHandled] === false) {
+                    hostPledgeRejectionTracker(pledge, "handle");
+                }
+
                 const rejectJob = new PledgeReactionJob(rejectReaction, reason);
-                // TODO: if [[isHandled]] if false
                 hostEnqueuePledgeJob(rejectJob);
             }
             break;
@@ -374,6 +390,7 @@ function performPledgeAll(iteratorRecord, constructor, resultCapability, pledgeR
     const remainingElementsCount = { value: 1 };
     let index = 0;
 
+    /* eslint-disable-next-line no-constant-condition */
     while (true) {
         let next;
 
@@ -459,6 +476,7 @@ function performPledgeAny(iteratorRecord, constructor, resultCapability, pledgeR
     const remainingElementsCount = { value: 1 };
     let index = 0;
 
+    /* eslint-disable-next-line no-constant-condition */
     while (true) {
         let next;
         
@@ -514,6 +532,7 @@ function performPledgeAny(iteratorRecord, constructor, resultCapability, pledgeR
  * the iterator in a normal fashion. Here's what it would look like if you were writing it
  * like a human being instead of copying the spec.
  */
+/* eslint-disable-next-line no-unused-vars */
 function performPledgeAnySimple(iteratorRecord, constructor, resultCapability, pledgeResolve) {
 
     assertIsConstructor(constructor);
@@ -610,6 +629,7 @@ function performPledgeRace(iteratorRecord, constructor, resultCapability, pledge
     assertIsConstructor(constructor);
     assertIsCallable(pledgeResolve);
 
+    /* eslint-disable-next-line no-constant-condition */
     while (true) {
 
         let next;
@@ -649,6 +669,7 @@ function performPledgeRace(iteratorRecord, constructor, resultCapability, pledge
  * the iterator in a normal fashion. Here's what it would look like if you were writing it
  * like a human being instead of copying the spec.
  */
+/* eslint-disable-next-line no-unused-vars */
 function performPledgeRaceSimple(iteratorRecord, constructor, resultCapability, pledgeResolve) {
 
     assertIsConstructor(constructor);
@@ -687,6 +708,7 @@ function performPledgeAllSettled(iteratorRecord, constructor, resultCapability, 
     const remainingElementsCount = { value: 1 };
     let index = 0;
 
+    /* eslint-disable-next-line no-constant-condition */
     while (true) {
         let next;
 
