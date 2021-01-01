@@ -104,11 +104,11 @@ export class RejectionTracker {
                 this.aboutToBeNotified.delete(pledge);
                 return;
             }
-
+console.log('ad')
             if (!this.outstandingRejections.has(pledge)) {
                 return;
             }
-
+console.log('here')
             this.outstandingRejections.delete(pledge);
 
             setTimeout(() => {

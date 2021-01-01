@@ -236,7 +236,7 @@ export function rejectPledge(pledge, reason) {
     pledge[PledgeSymbol.state] = "rejected";
 
     // global rejection tracking
-    if (!pledge[PledgeSymbol.isHandled]) {
+    if (pledge[PledgeSymbol.isHandled] === false) {
         hostPledgeRejectionTracker(pledge, "reject");
     }
 

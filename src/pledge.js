@@ -102,7 +102,7 @@ export class Pledge {
         // noop
     }
 
-    static rejectionHandled(pledge, reason) {
+    static onRejectionHandled(pledge, reason) {
         // noop
     }
 
