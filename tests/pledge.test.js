@@ -1,7 +1,7 @@
 /**
  * @fileoverview Tests for the Env class.
  */
-/*global describe, it*/
+/*global describe, it, beforeEach, afterEach*/
 
 //-----------------------------------------------------------------------------
 // Requirements
@@ -967,7 +967,7 @@ describe("Pledge", () => {
         it("should log an error when a pledge is rejected without a rejection handler", done => {
             mockLogger.expects("error").once().withArgs("Pledge rejection was not caught: 43");
 
-            const pledge = new Pledge((resolve, reject) => {
+            new Pledge((resolve, reject) => {
                 reject(43);
             });
 
@@ -980,7 +980,7 @@ describe("Pledge", () => {
         it("should not log an error when a pledge is rejected with a rejection handler", done => {
             mockLogger.expects("error").never();
 
-            const pledge = new Pledge((resolve, reject) => {
+            new Pledge((resolve, reject) => {
                 reject(43);
             }).catch(() => {});
 
@@ -1009,7 +1009,7 @@ describe("Pledge", () => {
         });
 
         it("should not log an error when a pledge is rejected without a rejection handler and the event is cancelled", done => {
-            const pledge = new Pledge((resolve, reject) => {
+            new Pledge((resolve, reject) => {
                 reject(43);
             });
 
@@ -1026,11 +1026,11 @@ describe("Pledge", () => {
         });
 
         it("should call Pledge.onUnhandledRejection when two pledges are rejected without rejection handlers", done => {
-            const pledge1 = new Pledge((resolve, reject) => {
+            new Pledge((resolve, reject) => {
                 reject(43);
             });
 
-            const pledge2 = new Pledge((resolve, reject) => {
+            new Pledge((resolve, reject) => {
                 reject(44);
             });
 

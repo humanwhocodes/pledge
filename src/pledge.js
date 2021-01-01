@@ -98,13 +98,15 @@ export class Pledge {
         return this;
     }
 
+    /* eslint-disable no-unused-vars */
     static onUnhandledRejection(pledge, reason) {
         // noop
     }
-
+    
     static onRejectionHandled(pledge, reason) {
         // noop
     }
+    /* eslint-enable no-unused-vars */
 
     static any(iterable) {
 
@@ -388,6 +390,7 @@ function performPledgeAll(iteratorRecord, constructor, resultCapability, pledgeR
     const remainingElementsCount = { value: 1 };
     let index = 0;
 
+    /* eslint-disable-next-line no-constant-condition */
     while (true) {
         let next;
 
@@ -473,6 +476,7 @@ function performPledgeAny(iteratorRecord, constructor, resultCapability, pledgeR
     const remainingElementsCount = { value: 1 };
     let index = 0;
 
+    /* eslint-disable-next-line no-constant-condition */
     while (true) {
         let next;
         
@@ -528,6 +532,7 @@ function performPledgeAny(iteratorRecord, constructor, resultCapability, pledgeR
  * the iterator in a normal fashion. Here's what it would look like if you were writing it
  * like a human being instead of copying the spec.
  */
+/* eslint-disable-next-line no-unused-vars */
 function performPledgeAnySimple(iteratorRecord, constructor, resultCapability, pledgeResolve) {
 
     assertIsConstructor(constructor);
@@ -624,6 +629,7 @@ function performPledgeRace(iteratorRecord, constructor, resultCapability, pledge
     assertIsConstructor(constructor);
     assertIsCallable(pledgeResolve);
 
+    /* eslint-disable-next-line no-constant-condition */
     while (true) {
 
         let next;
@@ -663,6 +669,7 @@ function performPledgeRace(iteratorRecord, constructor, resultCapability, pledge
  * the iterator in a normal fashion. Here's what it would look like if you were writing it
  * like a human being instead of copying the spec.
  */
+/* eslint-disable-next-line no-unused-vars */
 function performPledgeRaceSimple(iteratorRecord, constructor, resultCapability, pledgeResolve) {
 
     assertIsConstructor(constructor);
@@ -701,6 +708,7 @@ function performPledgeAllSettled(iteratorRecord, constructor, resultCapability, 
     const remainingElementsCount = { value: 1 };
     let index = 0;
 
+    /* eslint-disable-next-line no-constant-condition */
     while (true) {
         let next;
 

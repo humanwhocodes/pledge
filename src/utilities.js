@@ -108,7 +108,7 @@ function getMethod(V, P) {
         return new ThrowCompletion(new TypeError("Property not found."));
     }
 
-    let func = V[P];
+    const func = V[P];
     if (func === undefined || func === null) {
         return new NormalCompletion(undefined);
     }
