@@ -76,7 +76,9 @@ export class RejectionTracker {
 
                 const notHandled = !event[canceled];
 
-                this.outstandingRejections.add(p);
+                if (p[PledgeSymbol.isHandled] === false) {
+                    this.outstandingRejections.add(p);
+                }
                 
                 if (notHandled) {
                     

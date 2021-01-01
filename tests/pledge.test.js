@@ -944,8 +944,7 @@ describe("Pledge", () => {
         });
     });
 
-
-    describe.only("Rejection Tracking", () => {
+    describe("Rejection Tracking", () => {
 
         const fakeLogger = { error(){} };
         let mockLogger, mockPledge;
@@ -1002,6 +1001,23 @@ describe("Pledge", () => {
                 reason: 43
             }));            
             
+            setTimeout(() => {
+                mockLogger.verify();
+                mockPledge.verify();
+                done();
+            }, 500);
+        });
+
+        it("should not log an error when a pledge is rejected without a rejection handler and the event is cancelled", done => {
+            const pledge = new Pledge((resolve, reject) => {
+                reject(43);
+            });
+
+            mockLogger.expects("error").never();
+            Pledge.onUnhandledRejection = (event) => {
+                event.preventDefault();
+            };
+
             setTimeout(() => {
                 mockLogger.verify();
                 mockPledge.verify();
