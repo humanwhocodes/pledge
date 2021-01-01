@@ -975,7 +975,7 @@ describe("Pledge", () => {
             setTimeout(() => {
                 mockLogger.verify();
                 done();
-            }, 1000);
+            }, 500);
         });
 
         it("should not log an error when a pledge is rejected with a rejection handler", done => {
@@ -988,7 +988,7 @@ describe("Pledge", () => {
             setTimeout(() => {
                 mockLogger.verify();
                 done();
-            }, 1000);
+            }, 500);
         });
 
         it("should call Pledge.onUnhandledRejection when a pledge is rejected without a rejection handler", done => {
@@ -1006,7 +1006,7 @@ describe("Pledge", () => {
                 mockLogger.verify();
                 mockPledge.verify();
                 done();
-            }, 1000);
+            }, 500);
         });
 
         it("should call Pledge.onUnhandledRejection when two pledges are rejected without rejection handlers", done => {
@@ -1025,30 +1025,36 @@ describe("Pledge", () => {
                 mockLogger.verify();
                 mockPledge.verify();
                 done();
-            }, 1000);
+            }, 500);
         });
 
 
-        xit("should call Pledge.onRejectionHandled when a pledge is rejected and later a rejection handler is added", done => {
+        it("should call Pledge.onRejectionHandled when a pledge is rejected and later a rejection handler is added", done => {
             const pledge = new Pledge((resolve, reject) => {
                 reject(43);
             });
 
             mockLogger.expects("error").once().withArgs("Pledge rejection was not caught: 43");
+
+            mockPledge.expects("onUnhandledRejection").once().withArgs(sinon.match({
+                pledge,
+                reason: 43
+            }));
+
             mockPledge.expects("onRejectionHandled").once().withArgs(sinon.match({
                 pledge,
                 reason: 43
-            }));            
-            
+            }));
+
             setTimeout(() => {
                 pledge.catch(() => {});
-            }, 20);
+            }, 200);
 
             setTimeout(() => {
                 mockLogger.verify();
                 mockPledge.verify();
                 done();
-            }, 1000);
+            }, 500);
         });
 
 

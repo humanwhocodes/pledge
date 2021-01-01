@@ -85,7 +85,7 @@ export class RejectionTracker {
                     this.logger.error(`Pledge rejection was not caught: ${ p[PledgeSymbol.result] }`);
                 }
             }
-        }, 500);
+        }, 100);
     }
 
     stopMonitor() {
@@ -94,7 +94,7 @@ export class RejectionTracker {
     }
 
     track(pledge, operation) {
-        
+
         if (operation === "reject") {
             this.aboutToBeNotified.add(pledge);
         }
@@ -104,11 +104,11 @@ export class RejectionTracker {
                 this.aboutToBeNotified.delete(pledge);
                 return;
             }
-console.log('ad')
+
             if (!this.outstandingRejections.has(pledge)) {
                 return;
             }
-console.log('here')
+            
             this.outstandingRejections.delete(pledge);
 
             setTimeout(() => {
