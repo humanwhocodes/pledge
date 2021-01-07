@@ -1073,6 +1073,30 @@ describe("Pledge", () => {
             }, 500);
         });
 
+        it("should not call Pledge.onRejectionHandled when a pledge is rejected and a rejection handler is added during onUnhandledRejection", done => {
+            const pledge = new Pledge((resolve, reject) => {
+                reject(43);
+            });
+
+            mockLogger.expects("error").once().withArgs("Pledge rejection was not caught: 43");
+
+            Pledge.onUnhandledRejection = event => {
+                event.pledge.catch(() => {});
+            };
+
+            mockPledge.expects("onRejectionHandled").never();
+
+            setTimeout(() => {
+                pledge.catch(() => {});
+            }, 200);
+
+            setTimeout(() => {
+                mockLogger.verify();
+                mockPledge.verify();
+                done();
+            }, 500);
+        });
+
 
     });
 
