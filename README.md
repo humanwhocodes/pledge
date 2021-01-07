@@ -104,6 +104,25 @@ const fulfilled = Pledge.resolve(42);
 const rejected = Pledge.reject(new Error("Uh oh!"));
 ```
 
+To watch for unhandled rejections:
+
+```js
+// this function is called when any pledge is rejected without a handler
+// similar to window.onunhandledrejection
+Pledge.onUnhandledRejection = event => {
+    const { pledge, reason } = event;
+
+    // cancel warning about this unhandled rejection
+    event.preventDefault();
+};
+
+// this function is called when a previously unhandled rejection becomes handled
+// similar to window.onrejectionhandled;
+Pledge.onRejectionHandled = event => {
+    const { pledge, reason } = event;
+};
+```
+
 ## Frequently Asked Questions (FAQ)
 
 ### Why make this package?
