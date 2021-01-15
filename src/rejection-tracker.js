@@ -36,9 +36,10 @@ export class RejectionTracker {
         this.aboutToBeNotified = new Set();
 
         /**
-         * This set keeps track of pledges that were unhandled, triggered
-         * onUnhandledRejection, and then had a rejection handler added. These
-         * pledges will trigger onRejectionHandled.
+         * This set keeps track of pledges that were unhandled and triggered
+         * onUnhandledRejection. These pledges might end up with a rejection
+         * handler at some point, so we track the in case we need to
+         * trigger onRejectionHandled.
          * @type WeakSet
          * @property outstandingRejections
          */
