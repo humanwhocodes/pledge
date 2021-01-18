@@ -99,11 +99,11 @@ export class Pledge {
     }
 
     /* eslint-disable no-unused-vars */
-    static onUnhandledRejection(pledge, reason) {
+    static onUnhandledRejection(event) {
         // noop
     }
     
-    static onRejectionHandled(pledge, reason) {
+    static onRejectionHandled(event) {
         // noop
     }
     /* eslint-enable no-unused-vars */
