@@ -1,6 +1,6 @@
 {
   "name": "@humanwhocodes/pledge",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "A custom-built promise implementation.",
   "main": "dist/pledge.cjs.js",
   "module": "dist/pledge.js",
