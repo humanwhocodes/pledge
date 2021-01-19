@@ -27,7 +27,7 @@ Additionally, thanks to my [GitHub sponsors](https://github.com/sponsors/nzakas)
 
 5. [Part 5: Promise.race() and Promise.any()](https://humanwhocodes.com/blog/2020/11/creating-javascript-promise-from-scratch-promise-race-any/)
 6. [Part 6: Promise.all() and Promise.allSettled()](https://humanwhocodes.com/blog/2020/12/creating-javascript-promise-from-scratch-promise-all-allsettled/)
-7. Unhandled rejection tracking (coming soon)
+7. [Unhandled rejection tracking](https://humanwhocodes.com/blog/2021/01/creating-javascript-promise-from-scratch-unhandled-rejection-tracking/)
 
 If you found this series and code helpful, please [sponsor me](https://github.com/sponsors/nzakas) on GitHub.
 
